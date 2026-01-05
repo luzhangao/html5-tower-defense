@@ -67,3 +67,19 @@
 - Prompt: “增加关卡进度并持久化最高关卡。”
 - 操作: 记录 `max_wave` 到 localStorage，面板显示 Max Wave。
 - 验收: 重新载入后最高关卡保持不变并显示。
+
+## 阶段3 工作记录
+### 步骤3.1/3.2 API 与匿名身份
+- Prompt: “继续 step3，新增 APIClient 与 AuthManager。”
+- 操作: 实现 APIClient（start/submit/leaderboard）与 AuthManager（匿名身份、token 持久化）。
+- 验收: 本地生成 token/user_id，API 调用携带 Authorization。
+
+### 步骤3.3 排行榜 UI
+- Prompt: “添加排行榜 UI（Top100 + 我的排名 + 刷新）。”
+- 操作: 新增 DOM 面板与 LeaderboardUI，支持打开、刷新、展示列表与我的排名。
+- 验收: 点击 Leaderboard 打开面板，刷新后列表更新。
+
+### 步骤3.4 排行榜模式集成
+- Prompt: “集成排行榜模式（start/submit）。”
+- 操作: 增加 Leaderboard 模式按钮，开局请求 seed，结束自动提交并显示状态。
+- 验收: 开局状态提示“Attempt ready”，结束后显示提交结果。

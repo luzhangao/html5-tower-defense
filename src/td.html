@@ -12,9 +12,33 @@
 	<div id="td-wrapper">
 		<h1>HTML5 塔防游戏</h1>
 
+		<div id="td-controls">
+			<button id="td-btn-normal" type="button">Start Normal</button>
+			<button id="td-btn-leaderboard" type="button">Start Leaderboard</button>
+			<button id="td-btn-leaderboard-open" type="button">Leaderboard</button>
+			<span id="td-submit-status"></span>
+		</div>
+
 		<div id="td-loading">加载中...</div>
 		<div id="td-board">
 			<canvas id="td-canvas">抱歉，您的浏览器不支持 HTML 5 Canvas 标签，请使用 IE9 / Chrome / Opera 等浏览器浏览本页以获得最佳效果。</canvas>
+		</div>
+
+		<div id="td-leaderboard-panel">
+			<div class="lb-header">
+				<span>Leaderboard</span>
+				<button id="td-leaderboard-refresh" type="button">Refresh</button>
+				<button id="td-leaderboard-close" type="button">Close</button>
+			</div>
+			<div id="td-leaderboard-status" class="lb-status"></div>
+			<div class="lb-section">
+				<div class="lb-title">Top 100</div>
+				<ol id="td-leaderboard-list" class="lb-list"></ol>
+			</div>
+			<div class="lb-section">
+				<div class="lb-title">My Rank</div>
+				<div id="td-leaderboard-me" class="lb-me">-</div>
+			</div>
 		</div>
 	</div>
 	<div id="about">
@@ -34,6 +58,9 @@
 <script type="text/javascript" src="js/td-scoring-system.js"></script>
 <script type="text/javascript" src="js/td-speed-controller.js"></script>
 <script type="text/javascript" src="js/td-audio.js"></script>
+<script type="text/javascript" src="js/td-api-client.js"></script>
+<script type="text/javascript" src="js/td-auth.js"></script>
+<script type="text/javascript" src="js/td-leaderboard.js"></script>
 <script type="text/javascript" src="js/td-lang.js"></script>
 <script type="text/javascript" src="js/td-event.js"></script>
 <script type="text/javascript" src="js/td-stage.js"></script>

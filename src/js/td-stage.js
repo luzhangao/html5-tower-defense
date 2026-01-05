@@ -319,6 +319,10 @@ _TD.a.push(function (TD) {
 					});
 				}
 			}
+
+			if (TD.game_mode === "leaderboard") {
+				TD.submitScore();
+			}
 		},
 		step: function () {
 			if (this.state != 1) return;

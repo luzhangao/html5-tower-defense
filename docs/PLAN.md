@@ -1057,24 +1057,24 @@ class AntiCheatService:
 ### 阶段3：网络和排行榜
 
 #### 步骤3.1：API客户端
-- [ ] 创建`APIClient`类
-- [ ] 实现所有API方法
+- [x] 创建`APIClient`类
+- [x] 实现所有API方法
 
 **涉及文件**：
 - 新建：`frontend/src/network/APIClient.js`
 
 #### 步骤3.2：匿名身份管理
-- [ ] 创建`AuthManager`类
-- [ ] 实现token持久化（localStorage）
+- [x] 创建`AuthManager`类
+- [x] 实现token持久化（localStorage）
 
 **涉及文件**：
 - 新建：`frontend/src/network/AuthManager.js`
 
 #### 步骤3.3：排行榜UI
-- [ ] 创建排行榜界面
-- [ ] 显示Top 100
-- [ ] 显示我的排名
-- [ ] 刷新功能
+- [x] 创建排行榜界面
+- [x] 显示Top 100
+- [x] 显示我的排名
+- [x] 刷新功能
 
 **涉及文件**：
 - 新建：`frontend/src/ui/LeaderboardUI.js`
@@ -1082,9 +1082,9 @@ class AntiCheatService:
 - 修改：`src/css/c.css`
 
 #### 步骤3.4：集成排行榜模式
-- [ ] 游戏开始前调用`/api/game/start`获取seed
-- [ ] 游戏结束后提交到`/api/game/submit`
-- [ ] 显示验证结果
+- [x] 游戏开始前调用`/api/game/start`获取seed
+- [x] 游戏结束后提交到`/api/game/submit`
+- [x] 显示验证结果
 
 **涉及文件**：
 - 修改：`src/js/td-stage.js`

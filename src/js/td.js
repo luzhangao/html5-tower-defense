@@ -56,8 +56,22 @@ var _TD = {
 				this.rulesVersion = TD.rulesManager.getRulesVersion();
 				this.missed_monsters = 0;
 				this.max_wave = 0;
+				this.game_mode = "normal";
+				this.use_server_seed = false;
+				this.attempt_id = null;
+				this.apiBaseUrl = "";
 
-				this.start();
+				this.authManager = new TD.AuthManager();
+				this.apiClient = new TD.APIClient({
+					baseUrl: this.apiBaseUrl,
+					authManager: this.authManager
+				});
+				this._authPromise = this.authManager.ensureIdentity(this.apiClient);
+				this.leaderboardUI = new TD.LeaderboardUI({ apiClient: this.apiClient });
+				this.leaderboardUI.init();
+				this.setupDomControls();
+
+				this.startNormalGame();
 			},
 
 			/**
@@ -79,7 +93,9 @@ var _TD = {
 				this.exp_fps_eighth = Math.floor(this.exp_fps / 8);
 				this.iframe = 0;
 				this.missed_monsters = 0;
-				this.seed = (new Date()).getTime();
+				if (!this.use_server_seed) {
+					this.seed = (new Date()).getTime();
+				}
 				TD.initRandom(this.seed);
 				this.entityManager = new TD.EntityManager();
 				this.actionDispatcher = new TD.ActionDispatcher(this);
@@ -275,6 +291,86 @@ var _TD = {
 				var panel = this.stage && this.stage.current_act && this.stage.current_act.current_scene && this.stage.current_act.current_scene.panel;
 				if (panel && panel.btn_speed) {
 					panel.btn_speed.text = "Speed: " + this.speedController.getSpeed() + "x";
+				}
+			},
+
+			setupDomControls: function () {
+				var btnNormal = TD.lang.$e("td-btn-normal");
+				var btnLeaderboard = TD.lang.$e("td-btn-leaderboard");
+				var submitStatus = TD.lang.$e("td-submit-status");
+
+				if (btnNormal) {
+					btnNormal.onclick = this.startNormalGame.bind(this);
+				}
+				if (btnLeaderboard) {
+					btnLeaderboard.onclick = this.startLeaderboardGame.bind(this);
+				}
+				this.submitStatusEl = submitStatus;
+			},
+
+			startNormalGame: function () {
+				this.game_mode = "normal";
+				this.use_server_seed = false;
+				this.attempt_id = null;
+				this.start();
+				if (this.submitStatusEl) this.submitStatusEl.textContent = "";
+			},
+
+			startLeaderboardGame: function () {
+				this.game_mode = "leaderboard";
+				if (this.submitStatusEl) this.submitStatusEl.textContent = "Requesting seed...";
+				var onReady = function () {
+					this.apiClient.startGame(this.rulesVersion).then(function (res) {
+						this.attempt_id = res.attempt_id;
+						this.seed = res.seed;
+						this.use_server_seed = true;
+						this.start();
+						if (this.submitStatusEl) this.submitStatusEl.textContent = "Attempt ready";
+					}.bind(this)).catch(function (err) {
+						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Start failed";
+					}.bind(this));
+				}.bind(this);
+
+				if (this._authPromise) {
+					this._authPromise.then(onReady).catch(function (err) {
+						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Auth failed";
+					}.bind(this));
+				} else {
+					onReady();
+				}
+			},
+
+			submitScore: function () {
+				if (!this.attempt_id || !this.recorder || !this.recorder.result) return;
+				var payload = {
+					attempt_id: this.attempt_id,
+					rules_version: this.rulesVersion,
+					score_claim: this.recorder.result.score,
+					level_claim: this.recorder.result.wave,
+					actions: this.recorder.actions
+				};
+
+				if (this.submitStatusEl) this.submitStatusEl.textContent = "Submitting...";
+				var submit = function () {
+					this.apiClient.submitScore(payload).then(function (res) {
+						this.last_submit_result = res;
+						if (this.submitStatusEl) {
+							this.submitStatusEl.textContent = res.success ? "Submitted" : ("Rejected: " + res.reason);
+						}
+						if (this.leaderboardUI) {
+							this.leaderboardUI.refresh();
+						}
+					}.bind(this)).catch(function (err) {
+						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Submit failed";
+					}.bind(this));
+				}.bind(this);
+
+				if (this._authPromise) {
+					this._authPromise.then(submit).catch(function (err) {
+						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Auth failed";
+					}.bind(this));
+				} else {
+					submit();
 				}
 			},
 

@@ -99,7 +99,7 @@ _TD.a.push(function (TD) {
 			this.btn_restart = new TD.Button("panel-btn-restart", {
 				scene: this.scene,
 				x: this.x,
-			y: this.y + 340 * _TD.retina,
+				y: this.y + 340 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_restart_text"),
 				step_level: this.step_level,
@@ -108,7 +108,11 @@ _TD.a.push(function (TD) {
 					setTimeout(function () {
 						TD.stage.clear();
 						TD.is_paused = true;
-						TD.start();
+						if (TD.game_mode === "leaderboard") {
+							TD.startLeaderboardGame();
+						} else {
+							TD.startNormalGame();
+						}
 						TD.mouseHand(false);
 					}, 0);
 				}
