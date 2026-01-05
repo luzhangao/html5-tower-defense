@@ -59,7 +59,7 @@ var _TD = {
 				this.game_mode = "normal";
 				this.use_server_seed = false;
 				this.attempt_id = null;
-				this.apiBaseUrl = "";
+				this.apiBaseUrl = "http://localhost:8000";
 
 				this.authManager = new TD.AuthManager();
 				this.apiClient = new TD.APIClient({

@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "tower-defense-backend"
+version = "0.1.0"
+description = "Tower Defense backend service"
+authors = ["unknown"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "0.115.6"
+uvicorn = "0.34.0"
+sqlalchemy = "2.0.36"
+pydantic = "2.10.3"
+pydantic-settings = "2.6.1"
+httpx = "0.28.1"
+pyjwt = "2.10.1"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

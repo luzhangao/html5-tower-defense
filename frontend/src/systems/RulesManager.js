@@ -162,6 +162,12 @@ class RulesManager {
     this.currentVersion = RULES_VERSION;
   }
 
+  setVersion(version) {
+    if (RULES[version]) {
+      this.currentVersion = version;
+    }
+  }
+
   getRulesVersion() {
     return this.currentVersion;
   }

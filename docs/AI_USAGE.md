@@ -83,3 +83,35 @@
 - Prompt: “集成排行榜模式（start/submit）。”
 - 操作: 增加 Leaderboard 模式按钮，开局请求 seed，结束自动提交并显示状态。
 - 验收: 开局状态提示“Attempt ready”，结束后显示提交结果。
+
+## 阶段4 工作记录
+### 步骤4.1~4.6 后端骨架
+- Prompt: “继续 step4，搭建 FastAPI + SQLite 后端。”
+- 操作: 创建 `backend/` 结构、FastAPI app、SQLAlchemy 模型、API 路由、服务层与反作弊逻辑。
+- 验收: 启动后 `/health` 返回 ok；`/api/auth/anonymous` 返回 user_id/token。
+
+### 验证器接口
+- Prompt: “提供回放验证的 Python 调用端。”
+- 操作: 新增 `ReplayValidator`，默认调用 `http://localhost:3000` 的 verifier。
+- 验收: verifier 启动后 `/api/game/submit` 可进入验证流程（未启动时返回错误）。
+
+### Node.js 验证器脚手架
+- Prompt: “继续 step4.5，新增 verify.js 与 verifier 包。”
+- 操作: 新建 `backend/verifier/verify.js` + `backend/verifier/package.json`，提供 `/api/verify` 与 `/health`。
+- 验收: 服务启动后 `/health` 返回 engine 状态；未打包引擎时返回可读错误。
+
+### Headless 引擎模块
+- Prompt: “抽出 headless 引擎模块供 Node 验证器打包。”
+- 操作: 新增 `frontend/src/core/Engine.js`（最小校验/计分逻辑），webpack 入口改为该模块。
+- 验收: `engine-bundle.js` 可导出 `verifyReplay`，verifier 能加载并调用。
+
+### 联调与修正
+- Prompt: “本地联调 leaderboard 模式与后端。”
+- 操作: 打开 CORS（FastAPI 允许 `http://localhost:8081`），修正 verifier webpack 路径。
+- 验收: 前端可发起 `OPTIONS` 预检；API 请求不再被 405 拦截。
+- 发现: verifier 目前为最小 headless 引擎，导致 `Score mismatch`（与完整前端逻辑不一致）。
+
+### 联调命令
+- 后端启动：`poetry run uvicorn backend.app.main:app --reload --port 8000`
+- 验证器启动：`node verify.js`（在 `backend/verifier` 目录）
+- 前端静态服务：`python -m http.server 8081`（在 `src` 目录）

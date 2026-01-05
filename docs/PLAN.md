@@ -438,7 +438,7 @@ class AudioSystem {
 
 ### 技术栈
 
-- **语言版本**：Python 3.14.2, Node.js 24.12.0（从`.tool-versions`读取）
+- **语言版本**：Python 3.12.12, Node.js 24.12.0（从`.tool-versions`读取）
 - **框架**：FastAPI
 - **数据库**：SQLite3 + SQLAlchemy
 - **验证器**：Node.js（复用前端游戏引擎）
@@ -1093,10 +1093,10 @@ class AntiCheatService:
 ### 阶段4：后端开发
 
 #### 步骤4.1：搭建后端项目
-- [ ] 创建`backend/`目录结构
-- [ ] 创建`requirements.txt`
-- [ ] 初始化FastAPI应用
-- [ ] 配置SQLite数据库
+- [x] 创建`backend/`目录结构
+- [x] 创建`requirements.txt`
+- [x] 初始化FastAPI应用
+- [x] 配置SQLite数据库
 
 **涉及文件**：
 - 新建：`backend/app/main.py`
@@ -1104,11 +1104,11 @@ class AntiCheatService:
 - 新建：`backend/app/database/connection.py`
 
 #### 步骤4.2：数据库模型
-- [ ] 创建User模型
-- [ ] 创建Attempt模型
-- [ ] 创建Submission模型
-- [ ] 创建LeaderboardEntry模型
-- [ ] 运行数据库迁移
+- [x] 创建User模型
+- [x] 创建Attempt模型
+- [x] 创建Submission模型
+- [x] 创建LeaderboardEntry模型
+- [x] 运行数据库迁移
 
 **涉及文件**：
 - 新建：`backend/app/models/user.py`
@@ -1117,18 +1117,18 @@ class AntiCheatService:
 - 新建：`backend/app/models/leaderboard.py`
 
 #### 步骤4.3：身份认证服务
-- [ ] 实现匿名用户创建
-- [ ] 实现JWT token签发
-- [ ] 实现token验证中间件
+- [x] 实现匿名用户创建
+- [x] 实现JWT token签发
+- [x] 实现token验证中间件
 
 **涉及文件**：
 - 新建：`backend/app/services/auth_service.py`
 - 新建：`backend/app/api/auth.py`
 
 #### 步骤4.4：游戏服务
-- [ ] 实现`start_game`（发放attemptId和seed）
-- [ ] 实现`submit_score`（验证和入榜）
-- [ ] 实现防作弊检查
+- [x] 实现`start_game`（发放attemptId和seed）
+- [x] 实现`submit_score`（验证和入榜）
+- [x] 实现防作弊检查
 
 **涉及文件**：
 - 新建：`backend/app/services/game_service.py`
@@ -1136,10 +1136,10 @@ class AntiCheatService:
 - 新建：`backend/app/api/game.py`
 
 #### 步骤4.5：Node.js验证器
-- [ ] 创建`verifier/`目录
-- [ ] 使用webpack打包前端引擎为Node.js模块
-- [ ] 实现`verify.js`脚本
-- [ ] 实现Python调用Node.js的接口
+- [x] 创建`verifier/`目录
+- [x] 使用webpack打包前端引擎为Node.js模块
+- [x] 实现`verify.js`脚本
+- [x] 实现Python调用Node.js的接口
 
 **涉及文件**：
 - 新建：`backend/verifier/verify.js`
@@ -1148,9 +1148,9 @@ class AntiCheatService:
 - 新建：`backend/app/services/validator.py`
 
 #### 步骤4.6：排行榜服务
-- [ ] 实现查询排行榜
-- [ ] 实现查询我的排名
-- [ ] 实现Top100+20门槛机制
+- [x] 实现查询排行榜
+- [x] 实现查询我的排名
+- [x] 实现Top100+20门槛机制
 
 **涉及文件**：
 - 新建：`backend/app/api/leaderboard.py`
