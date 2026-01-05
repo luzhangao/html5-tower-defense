@@ -936,18 +936,18 @@ class AntiCheatService:
 ### 阶段1：前端核心引擎重构（最高优先级）
 
 #### 步骤1.1：搭建前端项目结构
-- [ ] 创建`frontend/`目录和子目录结构
-- [ ] 初始化package.json
-- [ ] 安装依赖：`npm install seedrandom`
-- [ ] 配置webpack/rollup用于打包
+- [x] 创建`frontend/`目录和子目录结构
+- [x] 初始化package.json
+- [x] 安装依赖：`npm install seedrandom`
+- [x] 配置webpack/rollup用于打包
 
 **涉及文件**：
 - 新建：`frontend/package.json`
 - 新建：`frontend/webpack.config.js`
 
 #### 步骤1.2：实现固定Tick时钟系统
-- [ ] 创建`TickClock`类
-- [ ] 重构`src/js/td.js`主循环
+- [x] 创建`TickClock`类
+- [x] 重构`src/js/td.js`主循环
   - 将`setTimeout`改为`requestAnimationFrame`
   - 引入固定tick机制
   - 替换`iframe`为`currentTick`
@@ -957,15 +957,15 @@ class AntiCheatService:
 - 修改：`src/js/td.js` (第130-167行)
 
 #### 步骤1.3：集成seedrandom并替换所有Math.random
-- [ ] 创建`RandomGenerator`封装
-- [ ] 在游戏初始化时调用`initRandom(seed)`
-- [ ] 逐个文件替换Math.random()：
+- [x] 创建`RandomGenerator`封装
+- [x] 在游戏初始化时调用`initRandom(seed)`
+- [x] 逐个文件替换Math.random()：
   - `src/js/td-walk.js:141`
   - `src/js/td-cfg-monsters.js:182,185`
   - `src/js/td-obj-monster.js:25,31,39,186`
   - `src/js/td-obj-building.js:200`
   - `src/js/td-lang.js:135,147-149,180`
-- [ ] 添加ESLint规则禁用Math.random
+- [x] 添加ESLint规则禁用Math.random
 
 **涉及文件**：
 - 新建：`frontend/src/core/RandomGenerator.js`
@@ -976,20 +976,20 @@ class AntiCheatService:
 - 修改：`src/js/td-lang.js`
 
 #### 步骤1.4：实现实体ID管理系统
-- [ ] 创建`EntityManager`类
-- [ ] 修改`Building`类添加`entityId`属性
-- [ ] 集成到建造/升级/出售流程
+- [x] 创建`EntityManager`类
+- [x] 修改`Building`类添加`entityId`属性
+- [x] 集成到建造/升级/出售流程
 
 **涉及文件**：
 - 新建：`frontend/src/core/EntityManager.js`
 - 修改：`src/js/td-obj-building.js`
 
 #### 步骤1.5：实现Action系统
-- [ ] 定义Action接口
-- [ ] 创建`ActionDispatcher`类
-- [ ] 实现验证逻辑（金币、位置、entityId等）
-- [ ] 重构`Grid.onClick`为ActionDispatcher
-- [ ] 重构`Building.upgrade/sell`为ActionDispatcher
+- [x] 定义Action接口
+- [x] 创建`ActionDispatcher`类
+- [x] 实现验证逻辑（金币、位置、entityId等）
+- [x] 重构`Grid.onClick`为ActionDispatcher
+- [x] 重构`Building.upgrade/sell`为ActionDispatcher
 
 **涉及文件**：
 - 新建：`frontend/src/systems/ActionSystem.js`
@@ -997,18 +997,18 @@ class AntiCheatService:
 - 修改：`src/js/td-obj-building.js`
 
 #### 步骤1.6：实现Recorder
-- [ ] 创建`Recorder`类
-- [ ] 在ActionDispatcher中集成记录
-- [ ] 实现`export()`方法用于提交
+- [x] 创建`Recorder`类
+- [x] 在ActionDispatcher中集成记录
+- [x] 实现`export()`方法用于提交
 
 **涉及文件**：
 - 新建：`frontend/src/systems/Recorder.js`
 
 #### 步骤1.7：规则版本化
-- [ ] 创建`RulesManager`
-- [ ] 从现有配置文件提取所有参数
-- [ ] 版本化所有影响游戏逻辑的数值
-- [ ] 修改配置文件改为从RulesManager读取
+- [x] 创建`RulesManager`
+- [x] 从现有配置文件提取所有参数
+- [x] 版本化所有影响游戏逻辑的数值
+- [x] 修改配置文件改为从RulesManager读取
 
 **涉及文件**：
 - 新建：`frontend/src/systems/RulesManager.js`
@@ -1016,9 +1016,9 @@ class AntiCheatService:
 - 修改：`src/js/td-cfg-monsters.js`
 
 #### 步骤1.8：实现分数计算系统
-- [ ] 创建`ScoringSystem`类
-- [ ] 实现分数公式（base + time_bonus - miss_penalty + gold_bonus）
-- [ ] 确保time_bonus随endTick递减（时间越短分数越高）
+- [x] 创建`ScoringSystem`类
+- [x] 实现分数公式（base + time_bonus - miss_penalty + gold_bonus）
+- [x] 确保time_bonus随endTick递减（时间越短分数越高）
 
 **涉及文件**：
 - 新建：`frontend/src/systems/ScoringSystem.js`

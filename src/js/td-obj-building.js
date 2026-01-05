@@ -21,6 +21,7 @@ _TD.a.push(function (TD) {
 			this.target = null;
 
 			cfg = cfg || {};
+			this.entityId = cfg.entityId || null;
 			this.map = cfg.map || null;
 			this.grid = cfg.grid || null;
 
@@ -289,36 +290,35 @@ _TD.a.push(function (TD) {
 		},
 
 		tryToUpgrade: function (btn) {
-			var cost = this.getUpgradeCost(),
-				msg = "";
-			if (cost > TD.money) {
-				msg = TD._t("not_enough_money", [cost]);
-			} else {
-				TD.money -= cost;
-				this.money += cost;
-				this.upgrade();
+			var msg = "";
+			try {
+				TD.actionDispatcher.dispatch({
+					t: TD.getCurrentTick(),
+					op: "upgrade",
+					entityId: this.entityId
+				}, false);
 				msg = TD._t("upgrade_success", [
 					TD._t("building_name_" + this.type), this.level,
 					this.getUpgradeCost()
 				]);
+			} catch (error) {
+				msg = error.message;
 			}
 
-			this.updateBtnDesc();
 			this.scene.panel.balloontip.msg(msg, btn);
 		},
 
 		tryToSell: function () {
 			if (!this.is_valid) return;
-
-			TD.money += this.getSellMoney();
-			this.grid.removeBuilding();
-			this.is_valid = false;
-			this.map.selected_building = null;
-			this.map.select_hl.hide();
-			this.map.checkHasWeapon();
-			this.scene.panel.btn_upgrade.hide();
-			this.scene.panel.btn_sell.hide();
-			this.scene.panel.balloontip.hide();
+			try {
+				TD.actionDispatcher.dispatch({
+					t: TD.getCurrentTick(),
+					op: "sell",
+					entityId: this.entityId
+				}, false);
+			} catch (error) {
+				this.scene.panel.balloontip.msg(error.message, this);
+			}
 		},
 
 		step: function () {
@@ -558,4 +558,3 @@ _TD.a.push(function (TD) {
 	};
 
 }); // _TD.a.push end
-

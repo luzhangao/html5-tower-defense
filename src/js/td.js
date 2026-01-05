@@ -45,9 +45,16 @@ var _TD = {
 				if (!this.canvas.getContext) return; // 不支持 canvas
 				this.ctx = this.canvas.getContext("2d");
 				this.monster_type_count = TD.getDefaultMonsterAttributes(); // 一共有多少种怪物
-				this.iframe = 0; // 当前播放到第几帧了
-				this.last_iframe_time = (new Date()).getTime();
+				this.tickClock = new TD.TickClock(TD.rulesManager.getRules().tickRate);
+				this.iframe = 0; // 当前逻辑tick
+				this.lastFrameTime = 0;
+				this._fps_last_time = 0;
+				this._fps_frames = 0;
 				this.fps = 0;
+				this.is_running = false;
+				this.seed = 0;
+				this.rulesVersion = TD.rulesManager.getRulesVersion();
+				this.missed_monsters = 0;
 
 				this.start();
 			},
@@ -56,15 +63,27 @@ var _TD = {
 			 * 开始游戏，或重新开始游戏
 			 */
 			start: function () {
-				clearTimeout(this._st);
+				if (this._raf_id) {
+					cancelAnimationFrame(this._raf_id);
+				}
 				TD.log("Start!");
 				var _this = this;
-				this._exp_fps_0 = this.exp_fps - 0.4; // 下限
-				this._exp_fps_1 = this.exp_fps + 0.4; // 上限
 
 				this.mode = "normal"; // mode 分为 normail（普通模式）及 build（建造模式）两种
 				this.eventManager.clear(); // 清除事件管理器中监听的事件
 				this.lang.mix(this, this.defaultSettings());
+				this.exp_fps = this.tickClock.getTickRate();
+				this.exp_fps_half = Math.floor(this.exp_fps / 2);
+				this.exp_fps_quarter = Math.floor(this.exp_fps / 4);
+				this.exp_fps_eighth = Math.floor(this.exp_fps / 8);
+				this.iframe = 0;
+				this.missed_monsters = 0;
+				this.seed = (new Date()).getTime();
+				TD.initRandom(this.seed);
+				this.entityManager = new TD.EntityManager();
+				this.actionDispatcher = new TD.ActionDispatcher(this);
+				this.recorder = new TD.Recorder();
+				this.recorder.init(this.seed, this.rulesVersion);
 				this.stage = new TD.Stage("stage-main", TD.getDefaultStageData("stage_main"));
 
 				this.canvas.setAttribute("width", this.stage.width);
@@ -83,7 +102,15 @@ var _TD = {
 
 				this.is_paused = false;
 				this.stage.start();
-				this.step();
+				this.tickClock.reset();
+				this.tickClock.setGameSpeed(1);
+				this.lastFrameTime = performance.now();
+				this._fps_last_time = this.lastFrameTime;
+				this._fps_frames = 0;
+				this.is_running = true;
+				this._raf_id = requestAnimationFrame(function (t) {
+					_this.step(t);
+				});
 
 				return this;
 			},
@@ -135,35 +162,34 @@ var _TD = {
 					_TD.cheat = "";
 				}
 
-				if (this.is_paused) return;
+				if (!this.is_running) return;
 
-				this.iframe++; // 当前总第多少帧
-				if (this.iframe % 50 == 0) {
-					// 计算 fps
-					var t = (new Date()).getTime(),
-						step_time = this.step_time;
-					this.fps = Math.round(500000 / (t - this.last_iframe_time)) / 10;
-					this.last_iframe_time = t;
+				var currentTime = arguments[0] || performance.now();
+				var deltaTime = currentTime - this.lastFrameTime;
+				this.lastFrameTime = currentTime;
 
-					// 动态调整 step_time ，保证 fps 恒定为 24 左右
-					if (this.fps < this._exp_fps_0 && step_time > 1) {
-						step_time--;
-					} else if (this.fps > this._exp_fps_1) {
-						step_time++;
-					}
-//					if (step_time != this.step_time)
-//						TD.log("FPS: " + this.fps + ", Step Time: " + step_time);
-					this.step_time = step_time;
+				if (this.is_paused) {
+					this._raf_id = requestAnimationFrame(this.step.bind(this));
+					return;
 				}
-				if (this.iframe % 2400 == 0) TD.gc(); // 每隔一段时间自动回收垃圾
 
-				this.stage.step();
+				var ticks = this.tickClock.update(deltaTime);
+				for (var i = 0; i < ticks.length; i++) {
+					this.iframe = ticks[i];
+					if (this.iframe % 2400 == 0) TD.gc(); // 每隔一段时间自动回收垃圾
+					this.stage.step();
+				}
+
 				this.stage.render();
 
-				var _this = this;
-				this._st = setTimeout(function () {
-					_this.step();
-				}, this.step_time);
+				this._fps_frames++;
+				if (currentTime - this._fps_last_time >= 1000) {
+					this.fps = Math.round((this._fps_frames * 1000) / (currentTime - this._fps_last_time));
+					this._fps_last_time = currentTime;
+					this._fps_frames = 0;
+				}
+
+				this._raf_id = requestAnimationFrame(this.step.bind(this));
 			},
 
 			/**
@@ -221,6 +247,10 @@ var _TD = {
 					CollectGarbage();
 					setTimeout(CollectGarbage, 1);
 				}
+			},
+
+			getCurrentTick: function () {
+				return this.tickClock.getCurrentTick();
 			}
 		};
 

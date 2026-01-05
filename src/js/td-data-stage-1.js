@@ -22,6 +22,7 @@ _TD.a.push(function (TD) {
 			TD.score = this.config.score;
 			TD.difficulty = this.config.difficulty;
 			TD.wave_damage = this.config.wave_damage;
+			TD.missed_monsters = 0;
 
 			// make map
 			var map = new TD.Map("main-map", TD.lang.mix({
@@ -309,5 +310,4 @@ _TD.a.push(function (TD) {
 	};
 
 }); // _TD.a.push end
-
 

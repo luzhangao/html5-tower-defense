@@ -1,0 +1,23 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Math",
+        "property": "random",
+        "message": "Use TD_RANDOM.next() instead of Math.random() to ensure deterministic behavior."
+      }
+    ],
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
+  }
+}

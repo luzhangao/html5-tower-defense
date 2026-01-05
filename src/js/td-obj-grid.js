@@ -94,8 +94,9 @@ _TD.a.push(function (TD) {
 		/**
 		 * 在当前格子添加指定类型的建筑
 		 * @param building_type {String}
+		 * @param entityId {String}
 		 */
-		addBuilding: function (building_type) {
+		addBuilding: function (building_type, entityId) {
 			if (this.building) {
 				// 如果当前格子已经有建筑，先将其移除
 				this.removeBuilding();
@@ -103,6 +104,7 @@ _TD.a.push(function (TD) {
 
 			var building = new TD.Building("building-" + building_type + "-" + TD.lang.rndStr(), {
 				type: building_type,
+				entityId: entityId,
 				step_level: this.step_level,
 				render_level: this.render_level
 			});
@@ -115,6 +117,8 @@ _TD.a.push(function (TD) {
 			this.map.checkHasWeapon();
 			if (this.map.pre_building)
 				this.map.pre_building.hide();
+
+			return building;
 		},
 
 		/**
@@ -253,8 +257,18 @@ _TD.a.push(function (TD) {
 					// 起点与终点之间被阻塞，不能修建
 					this.scene.panel.balloontip.msg(this._block_msg, this);
 				} else {
-					// 购买建筑
-					this.buyBuilding(this.map.pre_building.type);
+					// 通过ActionDispatcher购买建筑
+					var action = {
+						t: TD.getCurrentTick(),
+						op: "place",
+						entityType: this.map.pre_building.type,
+						pos: [this.mx, this.my]
+					};
+					try {
+						TD.actionDispatcher.dispatch(action, false);
+					} catch (error) {
+						this.scene.panel.balloontip.msg(error.message, this);
+					}
 				}
 			} else if (!this.building && this.map.selected_building) {
 				// 取消选中建筑

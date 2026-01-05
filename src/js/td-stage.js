@@ -297,6 +297,28 @@ _TD.a.push(function (TD) {
 			if (this.is_gameover) return;
 			this.pause();
 			this.is_gameover = true;
+
+			if (TD.ScoringSystem && TD.rulesManager) {
+				var endTick = TD.getCurrentTick();
+				var finalState = {
+					wave: this.wave,
+					endTick: endTick,
+					missedMonsters: TD.missed_monsters || 0,
+					money: TD.money || 0
+				};
+				var scoringResult = TD.ScoringSystem.calculateFinalScore(finalState, TD.rulesManager.getRules());
+				TD.score = scoringResult.total;
+				TD.score_breakdown = scoringResult.breakdown;
+				if (TD.recorder) {
+					TD.recorder.finalize({
+						score: TD.score,
+						wave: this.wave,
+						endTick: endTick,
+						missedMonsters: finalState.missedMonsters,
+						money: finalState.money
+					});
+				}
+			}
 		},
 		step: function () {
 			if (this.state != 1) return;

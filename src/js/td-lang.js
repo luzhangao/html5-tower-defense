@@ -132,7 +132,7 @@ _TD.a.push(function (TD) {
 		rndSort: function (list) {
 			var a = list.concat();
 			return a.sort(function () {
-				return Math.random() - 0.5;
+				return TD_RANDOM.next() - 0.5;
 			});
 		},
 
@@ -144,9 +144,9 @@ _TD.a.push(function (TD) {
 		 * 随机生成一个 RGB 颜色
 		 */
 		rndRGB: function () {
-			var r = Math.floor(Math.random() * 256),
-				g = Math.floor(Math.random() * 256),
-				b = Math.floor(Math.random() * 256);
+			var r = Math.floor(TD_RANDOM.next() * 256),
+				g = Math.floor(TD_RANDOM.next() * 256),
+				b = Math.floor(TD_RANDOM.next() * 256);
 
 			return "#" + this._rndRGB2(r) + this._rndRGB2(g) + this._rndRGB2(b);
 		},
@@ -177,7 +177,7 @@ _TD.a.push(function (TD) {
 				i, chars_len = chars.length, r;
 
 			for (i = 0; i < n; i++) {
-				r = Math.floor(Math.random() * chars_len);
+				r = Math.floor(TD_RANDOM.next() * chars_len);
 				a.push(chars.substr(r, 1));
 			}
 			return a.join("");

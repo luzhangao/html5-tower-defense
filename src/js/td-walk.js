@@ -138,7 +138,7 @@ _TD.a.push(function (TD) {
 
 				// 从 v 最小的邻格中随机选取一个作为当前格子
 				l = closest_nbs.length;
-				i = l > 1 ? Math.floor(Math.random() * l) : 0;
+				i = l > 1 ? Math.floor(TD_RANDOM.next() * l) : 0;
 				nb = closest_nbs[i];
 
 				x = nb[0];

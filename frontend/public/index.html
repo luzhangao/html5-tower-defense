@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML5 Tower Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #4ecca3;
+            margin-bottom: 20px;
+        }
+        .controls {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #4ecca3;
+            color: #16213e;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #3db88a;
+        }
+        button:active {
+            background: #2d9970;
+        }
+        button.active {
+            background: #f39c12;
+        }
+        .info {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .info-item {
+            margin: 5px 0;
+        }
+        .info-label {
+            color: #4ecca3;
+            font-weight: bold;
+        }
+        canvas {
+            background: #0f3460;
+            border: 2px solid #4ecca3;
+            border-radius: 4px;
+            display: block;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 HTML5 Tower Defense v2.0</h1>
+
+        <div class="controls">
+            <h3>游戏控制</h3>
+            <button onclick="TD.start()">▶️ 开始</button>
+            <button onclick="TD.stop()">⏹️ 停止</button>
+            <button onclick="TD.togglePause()">⏸️ 暂停/恢复</button>
+        </div>
+
+        <div class="controls">
+            <h3>游戏速度</h3>
+            <button id="speed-1" onclick="TD.setGameSpeed(1)">1x</button>
+            <button id="speed-2" onclick="TD.setGameSpeed(2)">2x</button>
+            <button id="speed-4" onclick="TD.setGameSpeed(4)">4x</button>
+            <button id="speed-8" onclick="TD.setGameSpeed(8)">8x</button>
+        </div>
+
+        <div class="info">
+            <h3>游戏信息</h3>
+            <div class="info-item">
+                <span class="info-label">当前Tick:</span>
+                <span id="current-tick">0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tick速率:</span>
+                <span id="tick-rate">24</span> tps
+            </div>
+            <div class="info-item">
+                <span class="info-label">游戏速度:</span>
+                <span id="game-speed">1</span>x
+            </div>
+            <div class="info-item">
+                <span class="info-label">状态:</span>
+                <span id="game-status">未启动</span>
+            </div>
+        </div>
+
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+
+        <div class="info">
+            <h3>说明</h3>
+            <p>✨ 这是新版本的游戏引擎，采用固定Tick系统</p>
+            <p>🎯 <strong>关键特性：</strong></p>
+            <ul>
+                <li>tick的推进只由真实时间决定（不受速度倍率影响）</li>
+                <li>gameSpeed只控制"每帧最多处理多少tick"（快进效果）</li>
+                <li>相同的游戏策略会产生相同的endTick</li>
+                <li>分数不受速度影响，因为分数基于endTick计算</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../dist/bundle.js"></script>
+    <script>
+        // 更新UI
+        setInterval(() => {
+            if (window.TD && window.TD.tickClock) {
+                document.getElementById('current-tick').textContent = TD.tickClock.getCurrentTick();
+                document.getElementById('tick-rate').textContent = TD.tickClock.getTickRate();
+                document.getElementById('game-speed').textContent = TD.tickClock.getGameSpeed();
+                document.getElementById('game-status').textContent =
+                    TD.isRunning ? (TD.tickClock.isPaused ? '已暂停' : '运行中') : '已停止';
+
+                // 高亮当前速度按钮
+                [1, 2, 4, 8].forEach(speed => {
+                    const btn = document.getElementById(`speed-${speed}`);
+                    if (TD.tickClock.getGameSpeed() === speed) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+        }, 100);
+    </script>
+</body>
+</html>

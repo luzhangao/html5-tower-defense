@@ -22,13 +22,13 @@ _TD.a.push(function (TD) {
 			var attr = TD.getDefaultMonsterAttributes(this.idx);
 
 			this.speed = Math.floor(
-				(attr.speed + this.difficulty / 2) * (Math.random() * 0.5 + 0.75)
+				(attr.speed + this.difficulty / 2) * (TD_RANDOM.next() * 0.5 + 0.75)
 			);
 			if (this.speed < 1) this.speed = 1;
 			if (this.speed > cfg.max_speed) this.speed = cfg.max_speed;
 
 			this.life = this.life0 = Math.floor(
-				attr.life * (this.difficulty + 1) * (Math.random() + 0.5) * 0.5
+				attr.life * (this.difficulty + 1) * (TD_RANDOM.next() + 0.5) * 0.5
 			);
 			if (this.life < 1) this.life = this.life0 = 1;
 
@@ -36,7 +36,7 @@ _TD.a.push(function (TD) {
 			if (this.shield < 0) this.shield = 0;
 
 			this.damage = Math.floor(
-				(attr.damage || 1) * (Math.random() * 0.5 + 0.75)
+				(attr.damage || 1) * (TD_RANDOM.next() * 0.5 + 0.75)
 			);
 			if (this.damage < 1) this.damage = 1;
 
@@ -142,6 +142,7 @@ _TD.a.push(function (TD) {
 			if (this.grid && this.map && this.grid == this.map.exit) {
 				TD.life -= this.damage;
 				TD.wave_damage += this.damage;
+				TD.missed_monsters++;
 				if (TD.life <= 0) {
 					TD.life = 0;
 					TD.stage.gameover();
@@ -183,7 +184,7 @@ _TD.a.push(function (TD) {
 		 */
 		getNextGrid: function () {
 			if (this.way.length == 0 ||
-				Math.random() < 0.1 // 有 1/10 的概率自动重新寻路
+				TD_RANDOM.next() < 0.1 // 有 1/10 的概率自动重新寻路
 			) {
 				this.findWay();
 			}
@@ -389,5 +390,4 @@ _TD.a.push(function (TD) {
 	};
 
 }); // _TD.a.push end
-
 
