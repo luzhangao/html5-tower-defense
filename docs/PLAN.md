@@ -1027,9 +1027,9 @@ class AntiCheatService:
 ### 阶段2：新增游戏功能
 
 #### 步骤2.1：游戏速度控制器
-- [ ] 创建`SpeedController`类
-- [ ] 添加UI按钮和快捷键
-- [ ] 集成到`TickClock.renderSpeedMultiplier`
+- [x] 创建`SpeedController`类
+- [x] 添加UI按钮和快捷键
+- [x] 集成到`TickClock.renderSpeedMultiplier`
 
 **涉及文件**：
 - 新建：`frontend/src/ui/SpeedController.js`
@@ -1037,9 +1037,9 @@ class AntiCheatService:
 - 修改：`src/css/c.css` (样式)
 
 #### 步骤2.2：音效系统
-- [ ] 创建`AudioSystem`类
-- [ ] 准备音效文件（cannon, lmg, hmg, laser）
-- [ ] 在`Building.fire()`中集成音效
+- [x] 创建`AudioSystem`类
+- [x] 准备音效文件（cannon, lmg, hmg, laser）
+- [x] 在`Building.fire()`中集成音效
 
 **涉及文件**：
 - 新建：`frontend/src/systems/AudioSystem.js`
@@ -1047,8 +1047,8 @@ class AntiCheatService:
 - 修改：`src/js/td-obj-building.js`
 
 #### 步骤2.3：关卡进度系统
-- [ ] 在UI中显示当前关卡
-- [ ] 持久化保存最高关卡（localStorage）
+- [x] 在UI中显示当前关卡
+- [x] 持久化保存最高关卡（localStorage）
 
 **涉及文件**：
 - 修改：`src/js/td-stage.js`

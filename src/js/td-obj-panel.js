@@ -53,11 +53,24 @@ _TD.a.push(function (TD) {
 			this.balloontip.addToScene(this.scene, 1, 9);
 
 			// make buttons
+			// 速度按钮
+			this.btn_speed = new TD.Button("panel-btn-speed", {
+				scene: this.scene,
+				x: this.x,
+			y: this.y + 260 * _TD.retina,
+				text: "Speed: 1x",
+				step_level: this.step_level,
+				render_level: this.render_level + 1,
+				onClick: function () {
+					TD.speedController.cycleSpeed();
+					TD.updateSpeedUI();
+				}
+			});
 			// 暂停按钮
 			this.btn_pause = new TD.Button("panel-btn-pause", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 260 * _TD.retina,
+			y: this.y + 300 * _TD.retina,
 				text: TD._t("button_pause_text"),
 				//desc: TD._t("button_pause_desc_0"),
 				step_level: this.step_level,
@@ -86,7 +99,7 @@ _TD.a.push(function (TD) {
 			this.btn_restart = new TD.Button("panel-btn-restart", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 300 * _TD.retina,
+			y: this.y + 340 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_restart_text"),
 				step_level: this.step_level,
@@ -104,7 +117,7 @@ _TD.a.push(function (TD) {
 			this.btn_upgrade = new TD.Button("panel-btn-upgrade", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 300 * _TD.retina,
+			y: this.y + 340 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_upgrade_text"),
 				step_level: this.step_level,
@@ -117,7 +130,7 @@ _TD.a.push(function (TD) {
 			this.btn_sell = new TD.Button("panel-btn-sell", {
 				scene: this.scene,
 				x: this.x,
-				y: this.y + 340 * _TD.retina,
+			y: this.y + 380 * _TD.retina,
 				is_visiable: false,
 				text: TD._t("button_sell_text"),
 				step_level: this.step_level,
@@ -157,6 +170,7 @@ _TD.a.push(function (TD) {
 			ctx.fillText(TD._t("panel_monster_title") + this.map.monsters.length,
 				this.x, this.y + 80 * _TD.retina);
 			ctx.fillText(TD._t("wave_info", [this.scene.wave]), this.x, this.y + 210 * _TD.retina);
+			ctx.fillText("Max Wave: " + (TD.max_wave || 0), this.x, this.y + 230 * _TD.retina);
 			ctx.closePath();
 
 			if (this._life_recover_wait) {
@@ -383,6 +397,7 @@ _TD.a.push(function (TD) {
 		render: function () {
 
 			this.panel.btn_pause.hide();
+			this.panel.btn_speed.hide();
 			this.panel.btn_upgrade.hide();
 			this.panel.btn_sell.hide();
 			this.panel.btn_restart.show();
@@ -433,4 +448,3 @@ _TD.a.push(function (TD) {
 	};
 
 }); // _TD.a.push end
-

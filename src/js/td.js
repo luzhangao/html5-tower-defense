@@ -55,6 +55,7 @@ var _TD = {
 				this.seed = 0;
 				this.rulesVersion = TD.rulesManager.getRulesVersion();
 				this.missed_monsters = 0;
+				this.max_wave = 0;
 
 				this.start();
 			},
@@ -84,6 +85,11 @@ var _TD = {
 				this.actionDispatcher = new TD.ActionDispatcher(this);
 				this.recorder = new TD.Recorder();
 				this.recorder.init(this.seed, this.rulesVersion);
+				this.speedController = new TD.SpeedController(this.tickClock);
+				this.speedController.setSpeed(1);
+				this.audioSystem = new TD.AudioSystem();
+				this.audioSystem.preload();
+				this.loadProgress();
 				this.stage = new TD.Stage("stage-main", TD.getDefaultStageData("stage_main"));
 
 				this.canvas.setAttribute("width", this.stage.width);
@@ -99,11 +105,22 @@ var _TD = {
 					var xy = _this.getEventXY.call(_this, e);
 					_this.click(xy[0], xy[1]);
 				};
+				if (this._speedKeyHandler) {
+					document.removeEventListener("keydown", this._speedKeyHandler);
+				}
+				this._speedKeyHandler = function (e) {
+					if (e.key === "f" || e.key === "F") {
+						_this.speedController.cycleSpeed();
+						_this.updateSpeedUI();
+					}
+				};
+				document.addEventListener("keydown", this._speedKeyHandler);
 
 				this.is_paused = false;
 				this.stage.start();
 				this.tickClock.reset();
 				this.tickClock.setGameSpeed(1);
+				this.updateSpeedUI();
 				this.lastFrameTime = performance.now();
 				this._fps_last_time = this.lastFrameTime;
 				this._fps_frames = 0;
@@ -167,13 +184,14 @@ var _TD = {
 				var currentTime = arguments[0] || performance.now();
 				var deltaTime = currentTime - this.lastFrameTime;
 				this.lastFrameTime = currentTime;
+				var speedMultiplier = this.speedController ? this.speedController.getSpeed() : 1;
 
 				if (this.is_paused) {
 					this._raf_id = requestAnimationFrame(this.step.bind(this));
 					return;
 				}
 
-				var ticks = this.tickClock.update(deltaTime);
+				var ticks = this.tickClock.update(deltaTime * speedMultiplier);
 				for (var i = 0; i < ticks.length; i++) {
 					this.iframe = ticks[i];
 					if (this.iframe % 2400 == 0) TD.gc(); // 每隔一段时间自动回收垃圾
@@ -251,6 +269,33 @@ var _TD = {
 
 			getCurrentTick: function () {
 				return this.tickClock.getCurrentTick();
+			},
+
+			updateSpeedUI: function () {
+				var panel = this.stage && this.stage.current_act && this.stage.current_act.current_scene && this.stage.current_act.current_scene.panel;
+				if (panel && panel.btn_speed) {
+					panel.btn_speed.text = "Speed: " + this.speedController.getSpeed() + "x";
+				}
+			},
+
+			loadProgress: function () {
+				try {
+					var v = window.localStorage && window.localStorage.getItem("td_max_wave");
+					var parsed = parseInt(v, 10);
+					this.max_wave = isNaN(parsed) ? 0 : parsed;
+				} catch (error) {
+					this.max_wave = 0;
+				}
+			},
+
+			saveProgress: function () {
+				try {
+					if (window.localStorage) {
+						window.localStorage.setItem("td_max_wave", this.max_wave);
+					}
+				} catch (error) {
+					// ignore storage errors
+				}
 			}
 		};
 

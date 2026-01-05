@@ -82,6 +82,10 @@ _TD.a.push(function (TD) {
 				this.wait_new_wave = this.config.wait_new_wave;
 				wave++;
 				scene.wave = wave;
+				if (wave > TD.max_wave) {
+					TD.max_wave = wave;
+					TD.saveProgress();
+				}
 				this.newWave({
 					map: this.map,
 					wave: wave
@@ -310,4 +314,3 @@ _TD.a.push(function (TD) {
 	};
 
 }); // _TD.a.push end
-

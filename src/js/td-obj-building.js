@@ -222,6 +222,15 @@ _TD.a.push(function (TD) {
 		fire: function () {
 			if (!this.target || !this.target.is_valid) return;
 
+			if (TD.audioSystem) {
+				var soundName = null;
+				if (this.type == "cannon") soundName = "cannon_fire";
+				if (this.type == "LMG") soundName = "lmg_fire";
+				if (this.type == "HMG") soundName = "hmg_fire";
+				if (this.type == "laser_gun") soundName = "laser_fire";
+				if (soundName) TD.audioSystem.play(soundName);
+			}
+
 			if (this.type == "laser_gun") {
 				// 如果是激光枪，目标立刻被击中
 				this.target.beHit(this, this.damage);
