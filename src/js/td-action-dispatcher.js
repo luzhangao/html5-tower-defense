@@ -11,6 +11,9 @@ _TD.a.push(function (TD) {
 
 	ActionDispatcher.prototype.dispatch = function (action, isReplay) {
 		var td = this.td;
+		if (!isReplay && td.recorder && td.recorder.result) {
+			throw new Error("Game is over");
+		}
 		if (!action || typeof action.t !== "number") {
 			throw new Error("Invalid action: missing tick");
 		}

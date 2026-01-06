@@ -44,6 +44,17 @@ cd frontend && npm test
 poetry run pytest backend/tests
 ```
 
+## 作弊码（仅普通模式）
+仅普通模式允许作弊（不参与排行榜）。在浏览器控制台执行：
+
+```
+_TD.cheat = "money+";
+_TD.cheat = "difficulty+";
+_TD.cheat = "difficulty-";
+_TD.cheat = "life+";
+_TD.cheat = "life-";
+```
+
 ## Docker Compose
 ```bash
 docker compose up --build

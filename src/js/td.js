@@ -192,28 +192,46 @@ var _TD = {
 			 * 5、生命值降为最低：javascript:_TD.cheat="life-";void(0);
 			 */
 			checkCheat: function (cheat_code) {
+				var patch = null;
 				switch (cheat_code) {
 					case "money+":
 						this.money += 1000000;
+						patch = { money: this.money };
 						this.log("cheat success!");
 						break;
 					case "life+":
 						this.life = 100;
+						patch = { life: this.life };
 						this.log("cheat success!");
 						break;
 					case "life-":
 						this.life = 1;
+						patch = { life: this.life };
 						this.log("cheat success!");
 						break;
 					case "difficulty+":
 						this.difficulty *= 2;
+						patch = { difficulty: this.difficulty };
 						this.log("cheat success! difficulty = " + this.difficulty);
 						break;
 					case "difficulty-":
 						this.difficulty /= 2;
+						patch = { difficulty: this.difficulty };
 						this.log("cheat success! difficulty = " + this.difficulty);
 						break;
 				}
+				if (patch) {
+					this.applyCheatToCore(patch);
+				}
+			},
+
+			applyCheatToCore: function (patch) {
+				if (!this.core_mode || !patch) return;
+				if (typeof window === "undefined" || !window.CoreRunner || !window.CoreRunner.getRunner) return;
+				var runner = window.CoreRunner.getRunner();
+				if (!runner || !runner.queueAction) return;
+				var tick = this.getCurrentTick() + 1;
+				runner.queueAction({ t: tick, op: "setState", state: patch });
 			},
 
 			/**
@@ -221,9 +239,11 @@ var _TD = {
 			 */
 			step: function () {
 
-				if (this.is_debug && _TD && _TD.cheat) {
-					// 检查作弊代码
-					this.checkCheat(_TD.cheat);
+				if (_TD && _TD.cheat) {
+					if (this.game_mode !== "leaderboard") {
+						// 检查作弊代码（仅普通模式允许）
+						this.checkCheat(_TD.cheat);
+					}
 					_TD.cheat = "";
 				}
 
