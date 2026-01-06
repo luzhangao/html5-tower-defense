@@ -75,6 +75,8 @@ _TD.a.push(function (TD) {
 	 * 怪物类型在 range 中指定，如未指定，则为随机
 	 */
 	TD.makeMonsters = function (n, range) {
+		var rngBefore = (window.TD_RANDOM && window.TD_RANDOM.getCallCount) ? window.TD_RANDOM.getCallCount() : 0;
+
 		var a = [], count = 0, i, c, d, r, l = TD.monster_type_count;
 		if (!range) {
 			range = [];
@@ -93,6 +95,9 @@ _TD.a.push(function (TD) {
 			a.push([c, range[r]]);
 			count += c;
 		}
+
+		var rngAfter = (window.TD_RANDOM && window.TD_RANDOM.getCallCount) ? window.TD_RANDOM.getCallCount() : 0;
+		console.log("[makeMonsters] n=" + n + ", RNG: " + rngBefore + " -> " + rngAfter + " (used: " + (rngAfter - rngBefore) + ")");
 
 		return a;
 	};

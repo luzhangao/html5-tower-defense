@@ -115,3 +115,53 @@
 - 后端启动：`poetry run uvicorn backend.app.main:app --reload --port 8000`
 - 验证器启动：`node verify.js`（在 `backend/verifier` 目录）
 - 前端静态服务：`python -m http.server 8081`（在 `src` 目录）
+
+## 阶段4.8 重构记录（Core Engine）
+### Core Engine 抽离与验证
+- Prompt: “完全重构为可重放的 Core Engine，并让 Node 端复用。”
+- 操作:
+  - 新增 `frontend/src/core-engine/*`（EngineCore/State/Rules/Waves/Scoring/Selectors）。
+  - 新增 `frontend/src/core-engine/VerifyCore.js` + `backend/verifier/verify-core.js`，端口 3001。
+  - 新增 `webpack.config.core-verifier.js` 打包 core-engine-bundle。
+  - 新增 `frontend/src/core-engine/BrowserRunner.js` + `DebugRenderer.js` + `BrowserEntry.js`。
+  - 新增 `webpack.config.core-browser.js` 打包 `src/js/core-runner-bundle.js`，`src/td.html` 引入。
+- 验收:
+  - `curl http://localhost:3001/api/verify-core` 可得到确定性 state。
+  - 浏览器 `CoreRunner.getState()` 可获取 Core 状态。
+
+### UI/Controls 与 CoreRunner 同步
+- Prompt: “同步 Speed/Pause 控制到 CoreRunner，并显示 seed 方便对比。”
+- 操作:
+  - Speed：`src/js/td-speed-controller.js` 调用 `CoreRunner.setSpeed`。
+  - Pause：`src/js/td-obj-panel.js` 调用 `CoreRunner.setPaused`。
+  - Debug：`frontend/src/core-engine/DebugRenderer.js` 输出 seed。
+  - Action 同步：`src/js/td-action-dispatcher.js` 使用 Recorder action 喂给 Core。
+- 验收:
+  - Speed 切换时 Core tick 增长随倍速变化。
+  - 暂停时 Core tick 停止增长。
+  - Debug 面板显示 seed 与 core state。
+
+### TickClock 速度策略修正
+- 问题: “倍速无效或过快导致分数异常。”
+- 修正: `src/js/td-tick-clock.js` 与 `frontend/src/core/TickClock.js` 改为 `accumulator += deltaTime * gameSpeed`。
+- 验收: 速度提升时 tick 明显加快，score 仍基于 tick 计算。
+
+### Core 驱动渲染与一致性验证
+- Prompt: “按 core 架构重构，浏览器与 Node 使用同一套逻辑。”
+- 操作:
+  - Core state 增加渲染字段（坐标/颜色/半径/位置）供浏览器只读渲染。
+  - 新增 `src/js/td-core-sync.js`：将 Core 状态同步到 legacy 渲染对象（building/monster）与 TD 全局值。
+  - `src/js/td.js` 改为 core 模式驱动：不再执行 legacy `stage.step()`，只 `CoreRunner.syncToTick()` + `TD.coreSync.sync()`。
+  - `src/js/td-action-dispatcher.js` 在 core 模式下直接将 Action 送入 Core，并记录 entityId。
+  - 修复 core 模式点击无效（补回 `TD.eventManager.step()`），修复卖塔按钮空引用。
+- 验收:
+  - Leaderboard 提交返回 `success: true`。
+  - `verify-core` 返回 `valid: true`，score/level/endTick 完全一致。
+
+### Core 提交分数一致性修正（墙体导致 Score mismatch）
+- Prompt: “放墙后提交分数失败，排查 score mismatch。”
+- 操作:
+  - 在 `src/js/td-stage.js` 的 `gameover` 阶段，core 模式下优先读取 `CoreRunner.getState()` 的最终状态（score/wave/missedMonsters/money/endTick），避免与 legacy 同步值偏差。
+  - 保持 `ScoringSystem` 作为非 core 模式的回退计算。
+- 验收:
+  - 放置墙体后提交分数不再出现 `Score mismatch`。

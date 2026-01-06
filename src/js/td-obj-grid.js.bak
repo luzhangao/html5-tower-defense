@@ -269,18 +269,25 @@ _TD.a.push(function (TD) {
 
 			if (TD.mode == "build" && this.map.is_main_map && !this.building) {
 				// 如果处于建设模式下，并且点击在主地图的空格子上，则尝试建设指定建筑
-				// 通过ActionDispatcher购买建筑(ActionDispatcher会进行验证，不需要在这里重复调用checkBlock)
-				var action = {
-					t: TD.getCurrentTick(),
-					op: "place",
-					entityType: this.map.pre_building.type,
-					pos: [this.mx, this.my]
-				};
-				try {
-					TD.actionDispatcher.dispatch(action, false);
-				} catch (error) {
+				if (this.checkBlock()) {
+					// 起点与终点之间被阻塞，不能修建
 					if (this.scene.panel) {
-						this.scene.panel.balloontip.msg(error.message, this);
+						this.scene.panel.balloontip.msg(this._block_msg, this);
+					}
+				} else {
+					// 通过ActionDispatcher购买建筑
+					var action = {
+						t: TD.getCurrentTick(),
+						op: "place",
+						entityType: this.map.pre_building.type,
+						pos: [this.mx, this.my]
+					};
+					try {
+						TD.actionDispatcher.dispatch(action, false);
+					} catch (error) {
+						if (this.scene.panel) {
+							this.scene.panel.balloontip.msg(error.message, this);
+						}
 					}
 				}
 			} else if (!this.building && this.map.selected_building) {

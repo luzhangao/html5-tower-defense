@@ -1140,20 +1140,88 @@ class AntiCheatService:
 - [x] 使用webpack打包前端引擎为Node.js模块
 - [x] 实现`verify.js`脚本
 - [x] 实现Python调用Node.js的接口
+- [ ]（重构替代）补齐headless引擎逻辑，使其与前端一致（怪物/波次/建塔/升级/卖塔/计分）
+- [ ]（重构替代）统一验证口径（rulesVersion、随机数、Action校验、实体生命周期）
+- [ ]（重构替代）校验前后端字段一致性（score/level/endTick/money等）
+
+#### 步骤4.5.1：RNG一致性修复（已完成）
+
+**问题1：Grid.onClick重复验证导致RNG不一致**
+- **现象**：Wave 1时浏览器端51次RNG调用，Node端29次，相差22次
+- **原因**：Grid.onClick在用户点击时调用checkBlock()验证，然后ActionDispatcher.dispatch()又调用一次checkBlock()，导致浏览器端重复寻路验证；而Node端回放时只有ActionDispatcher的验证
+- **修复**：移除Grid.onClick中的重复checkBlock()调用，统一由ActionDispatcher进行验证
+- **结果**：Wave 1-2 RNG完全一致（都是25次→80次）
+
+**问题2：Action执行触发的间接RNG消耗**
+- **现象**：从Wave 3开始RNG分歧（浏览器684次，Node 676次）
+- **原因**：用户在tick 1484执行sell操作，卖塔后已在场的怪物需要重新寻路，但这个间接RNG消耗没有被Action记录，导致回放时时机不同
+- **解决方案**：
+  1. 在Action中记录rngBefore/rngAfter字段，用于回放时验证RNG状态
+  2. 延迟寻路重计算到下一个tick统一处理，确保确定性执行顺序
+
+**已完成**：
+- [x] 增强RandomGenerator添加调用栈追踪（printCallLog/getCallSummary）
+- [x] 禁用Panel map的checkBlock寻路验证
+- [x] 移除Grid.onClick中的重复checkBlock调用
+- [x] 在ActionDispatcher中记录和验证RNG状态
+
+**待完成**：
+- [ ]（重构替代）实现怪物寻路重计算的延迟机制
+- [ ]（重构替代）测试验证完整游戏流程RNG一致性
 
 **涉及文件**：
-- 新建：`backend/verifier/verify.js`
-- 新建：`backend/verifier/package.json`
-- 新建：`webpack.config.verifier.js`
-- 新建：`backend/app/services/validator.py`
+- `src/js/td-random.js` - RNG调用追踪
+- `src/js/td-obj-grid.js` - 移除重复验证
+- `src/js/td-action-dispatcher.js` - 记录RNG状态
+- `src/js/td-data-stage-1.js` - RNG日志输出
 
 #### 步骤4.6：排行榜服务
 - [x] 实现查询排行榜
 - [x] 实现查询我的排名
 - [x] 实现Top100+20门槛机制
 
+#### 步骤4.7：服务端日志与调试
+- [ ] 后端API错误日志（FastAPI）
+- [ ] verifier错误日志（Node）
+- [ ] 关键流程日志（start/submit/validate）
+
 **涉及文件**：
 - 新建：`backend/app/api/leaderboard.py`
+
+#### 步骤4.8：完全重构为可重放的 Core Engine（替代现有修复）
+**目标**：将决定性逻辑抽离为纯 Engine，浏览器与Node复用同一套核心逻辑；Renderer/UI 不再影响逻辑或RNG。
+
+**执行步骤**：
+1. [x] **定义Core Engine接口**  
+   - 输入：seed、rulesVersion、actions  
+   - 输出：state快照、finalResult（score/level/endTick/money/missedMonsters）
+2. [x] **抽离确定性状态与系统**  
+   - Core只包含：tick系统、RNG、规则、实体系统、怪物/建筑/子弹逻辑、计分  
+   - 禁止Core访问DOM/Audio/Canvas
+3. [x] **抽离Renderer（仅浏览器）**  
+   - Renderer只读取Core state渲染  
+   - 不允许触发任何逻辑变更或RNG调用
+4. [x] **抽离UI/Controls（仅浏览器）**  
+   - UI只产生Action并喂给Core  
+   - 任何UI预览不改变Core状态
+   - [x] Speed/Pause 控制同步到 CoreRunner
+5. [x] **Headless Runner（Node）**  
+   - 直接运行Core，不挂Renderer  
+   - 验证器调用Core输出结果
+6. [x] **回放与验证一致性测试**  
+   - 同seed+actions在浏览器/Node输出完全一致  
+   - 建立“RNG调用一致性”测试
+7. [x] **替换现有验证链路**  
+   - [x] verifier改为直接调用Core（verify-core）  
+   - [x] 后端提交改用 verify-core 接口并传入 end_tick  
+   - [ ] 移除现有RNG调试/修补逻辑（归档）
+
+**涉及文件（待定）**：
+- 新建：`frontend/src/core-engine/*`（Core Engine模块）
+- 新建：`frontend/src/renderer/*`（仅浏览器）
+- 新建：`frontend/src/ui/*`（仅浏览器）
+- 修改：`backend/verifier/*`（改为直接跑Core）
+- 修改：`src/js/*`（逐步迁移/替换）
 
 ### 阶段5：测试
 

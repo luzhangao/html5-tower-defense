@@ -137,7 +137,7 @@ _TD.a.push(function (TD) {
 				this.pre_building.remove();
 			}
 
-			this.pre_building = new TD.Building(this.id + "-" + "pre-building-" + TD.lang.rndStr(), {
+			this.pre_building = new TD.Building(this.id + "-" + TD.lang.uiId("pre-building"), {
 				type: building_type,
 				map: this,
 				is_pre_building: true
@@ -375,4 +375,3 @@ _TD.a.push(function (TD) {
 	}
 
 }); // _TD.a.push end
-

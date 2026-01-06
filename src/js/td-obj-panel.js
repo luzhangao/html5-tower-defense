@@ -75,17 +75,31 @@ _TD.a.push(function (TD) {
 				//desc: TD._t("button_pause_desc_0"),
 				step_level: this.step_level,
 				render_level: this.render_level + 1,
-				onClick: function () {
-					if (this.scene.state == 1) {
-						this.scene.pause();
-						this.text = TD._t("button_continue_text");
+					onClick: function () {
+						if (this.scene.state == 1) {
+							this.scene.pause();
+							TD.is_paused = true;
+							if (TD.tickClock && TD.tickClock.setPaused) {
+								TD.tickClock.setPaused(true);
+							}
+							if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.setPaused) {
+								window.CoreRunner.setPaused(true);
+							}
+							this.text = TD._t("button_continue_text");
 						this.scene.panel.btn_upgrade.hide();
 						this.scene.panel.btn_sell.hide();
 						this.scene.panel.btn_restart.show();
 						//this.desc = TD._t("button_pause_desc_1");
-					} else if (this.scene.state == 2) {
-						this.scene.start();
-						this.text = TD._t("button_pause_text");
+						} else if (this.scene.state == 2) {
+							this.scene.start();
+							TD.is_paused = false;
+							if (TD.tickClock && TD.tickClock.setPaused) {
+								TD.tickClock.setPaused(false);
+							}
+							if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.setPaused) {
+								window.CoreRunner.setPaused(false);
+							}
+							this.text = TD._t("button_pause_text");
 						this.scene.panel.btn_restart.hide();
 						if (this.scene.map.selected_building) {
 							this.scene.panel.btn_upgrade.show();
@@ -140,6 +154,11 @@ _TD.a.push(function (TD) {
 				step_level: this.step_level,
 				render_level: this.render_level + 1,
 				onClick: function () {
+					if (!this.scene.map.selected_building) {
+						this.scene.panel.btn_sell.hide();
+						this.scene.panel.btn_upgrade.hide();
+						return;
+					}
 					this.scene.map.selected_building.tryToSell(this);
 				}
 			});

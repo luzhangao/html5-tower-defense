@@ -37,20 +37,26 @@ class GameService:
         }
 
     async def submit_score(self, user_id: str, payload: dict) -> dict:
+        print(f"[service] submit_score user_id={user_id}")
         AntiCheatService.check_rate_limit(user_id, self.db)
 
         attempt = self.db.query(Attempt).filter(Attempt.attempt_id == payload["attempt_id"]).first()
         if not attempt or attempt.user_id != user_id:
+            print("[service] invalid attempt")
             return {"success": False, "reason": "Invalid attempt"}
         if attempt.used:
+            print("[service] attempt already used")
             return {"success": False, "reason": "Attempt already used"}
         if attempt.expires_at < datetime.utcnow():
+            print("[service] attempt expired")
             return {"success": False, "reason": "Attempt expired"}
         if attempt.rules_version != payload["rules_version"]:
+            print("[service] rules version mismatch")
             return {"success": False, "reason": "Rules version mismatch"}
 
         actions = payload.get("actions") or []
         if AntiCheatService.is_suspicious_pattern(actions):
+            print("[service] suspicious actions")
             return {"success": False, "reason": "Suspicious actions"}
 
         submission = Submission(
@@ -68,6 +74,7 @@ class GameService:
 
         threshold = AntiCheatService.get_entry_threshold(self.db)
         if payload["score_claim"] < threshold:
+            print(f"[service] below threshold {payload['score_claim']} < {threshold}")
             return {
                 "success": True,
                 "score": payload["score_claim"],
@@ -76,14 +83,17 @@ class GameService:
                 "reason": "Score below threshold",
             }
 
+        print("[service] validating replay")
         result = await self.validator.validate(
             attempt.seed,
             attempt.rules_version,
             actions,
             payload["score_claim"],
             payload["level_claim"],
+            payload.get("end_tick"),
         )
         if not result.valid:
+            print(f"[service] validation failed: {result.error}")
             submission.validation_result = json.dumps({"valid": False, "error": result.error})
             submission.validated_at = datetime.utcnow()
             self.db.commit()
@@ -101,6 +111,7 @@ class GameService:
         actions_json = json.dumps(actions)
         if entry:
             if score <= entry.score:
+                print("[service] score not higher than existing")
                 return {
                     "success": True,
                     "score": score,

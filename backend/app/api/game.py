@@ -12,10 +12,12 @@ router = APIRouter(prefix="/api/game", tags=["game"])
 def start_game(payload: dict, user_id: str = Depends(get_user_id), db: Session = Depends(get_db)):
     rules_version = payload.get("rules_version")
     service = GameService(db, ReplayValidator())
+    print(f"[api] start_game user_id={user_id} rules_version={rules_version}")
     return service.start_game(user_id, rules_version)
 
 
 @router.post("/submit")
 async def submit_game(payload: dict, user_id: str = Depends(get_user_id), db: Session = Depends(get_db)):
     service = GameService(db, ReplayValidator())
+    print(f"[api] submit_game user_id={user_id} attempt_id={payload.get('attempt_id')}")
     return await service.submit_score(user_id, payload)

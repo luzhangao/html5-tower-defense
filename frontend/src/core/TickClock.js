@@ -2,9 +2,9 @@
  * TickClock - 固定Tick时钟系统
  *
  * 关键设计：
- * - tick的推进只由真实时间决定（不乘speed）
- * - 允许单帧处理多tick以追帧，确保真实时间推进
- * - 相同的游戏策略会产生相同的endTick（因为tick推进由真实时间决定）
+ * - tick推进受speed影响（加速会更快推进tick）
+ * - 允许单帧处理多tick以追帧，避免卡顿
+ * - 分数基于tick计时，速度只影响现实时间消耗
  * - 分数不受速度影响，因为分数基于endTick计算
  */
 class TickClock {
@@ -31,9 +31,8 @@ class TickClock {
       return [];
     }
 
-    // 关键：tick的推进只由真实时间决定（不乘speed）
     deltaTime = Math.min(deltaTime, 100);
-    this.accumulator += deltaTime;  // 注意：这里不乘gameSpeed
+    this.accumulator += deltaTime * this.gameSpeed;
 
     const ticksToProcess = [];
     const maxTicksPerFrame = Math.max(1, Math.floor(this.gameSpeed));
@@ -58,7 +57,7 @@ class TickClock {
    * @param {number} speed - 速度倍率 (1, 2, 4, 8)
    */
   setGameSpeed(speed) {
-    if (![1, 2, 4, 8].includes(speed)) {
+    if (![1, 2, 4, 8, 16, 32].includes(speed)) {
       console.warn(`Invalid game speed: ${speed}, using 1x instead`);
       this.gameSpeed = 1.0;
       return;

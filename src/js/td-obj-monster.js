@@ -87,9 +87,11 @@ _TD.a.push(function (TD) {
 				this.beKilled(building);
 			}
 
-			var balloontip = this.scene.panel.balloontip;
-			if (balloontip.el == this) {
-				balloontip.text = TD._t("monster_info", [this.life, this.shield, this.speed, this.damage]);
+			if (this.scene.panel) {
+				var balloontip = this.scene.panel.balloontip;
+				if (balloontip.el == this) {
+					balloontip.text = TD._t("monster_info", [this.life, this.shield, this.speed, this.damage]);
+				}
 			}
 
 		},
@@ -279,6 +281,8 @@ _TD.a.push(function (TD) {
 		},
 
 		onEnter: function () {
+			if (!this.scene.panel) return;
+
 			var msg,
 				balloontip = this.scene.panel.balloontip;
 

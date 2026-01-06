@@ -25,6 +25,7 @@ var _TD = {
 			exp_fps_quarter: 6,
 			exp_fps_eighth: 4,
 			stage_data: {},
+			core_mode: true,
 			defaultSettings: function () {
 				return {
 					step_time: 36, // 每一次 step 循环之间相隔多少毫秒
@@ -58,8 +59,18 @@ var _TD = {
 				this.max_wave = 0;
 				this.game_mode = "normal";
 				this.use_server_seed = false;
+				if (typeof window !== "undefined" && window.TD_CORE_MODE === false) {
+					this.core_mode = false;
+				}
 				this.attempt_id = null;
 				this.apiBaseUrl = "http://localhost:8000";
+
+				if (typeof __TD_HEADLESS__ !== "undefined" && __TD_HEADLESS__) {
+					this.game_mode = "normal";
+					this.use_server_seed = true;
+					this.start();
+					return;
+				}
 
 				this.authManager = new TD.AuthManager();
 				this.apiClient = new TD.APIClient({
@@ -93,10 +104,28 @@ var _TD = {
 				this.exp_fps_eighth = Math.floor(this.exp_fps / 8);
 				this.iframe = 0;
 				this.missed_monsters = 0;
+				if (typeof __TD_HEADLESS_SEED__ !== "undefined" && __TD_HEADLESS_SEED__ !== null) {
+					this.use_server_seed = true;
+					this.seed = __TD_HEADLESS_SEED__;
+					__TD_HEADLESS_SEED__ = null;
+				}
 				if (!this.use_server_seed) {
 					this.seed = (new Date()).getTime();
 				}
 				TD.initRandom(this.seed);
+				if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.reset) {
+					if (window.CoreRunner.getRunner) {
+						var runningCore = window.CoreRunner.getRunner();
+						if (runningCore && runningCore.stop) {
+							runningCore.stop();
+						}
+					}
+					window.CoreRunner.reset({
+						seed: this.seed,
+						rulesVersion: this.rulesVersion,
+						tickRate: this.tickClock.getTickRate()
+					});
+				}
 				this.entityManager = new TD.EntityManager();
 				this.actionDispatcher = new TD.ActionDispatcher(this);
 				this.recorder = new TD.Recorder();
@@ -200,18 +229,36 @@ var _TD = {
 				var currentTime = arguments[0] || performance.now();
 				var deltaTime = currentTime - this.lastFrameTime;
 				this.lastFrameTime = currentTime;
-				var speedMultiplier = this.speedController ? this.speedController.getSpeed() : 1;
-
 				if (this.is_paused) {
+					if (TD.eventManager && TD.eventManager.step) {
+						TD.eventManager.step();
+					}
+					this.stage.render();
 					this._raf_id = requestAnimationFrame(this.step.bind(this));
 					return;
 				}
 
-				var ticks = this.tickClock.update(deltaTime * speedMultiplier);
+				var ticks = this.tickClock.update(deltaTime);
+				var coreSynced = false;
 				for (var i = 0; i < ticks.length; i++) {
 					this.iframe = ticks[i];
 					if (this.iframe % 2400 == 0) TD.gc(); // 每隔一段时间自动回收垃圾
-					this.stage.step();
+					if (!this.core_mode) {
+						this.stage.step();
+					} else if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.getRunner) {
+						var coreRunner = window.CoreRunner.getRunner();
+						if (coreRunner && coreRunner.syncToTick) {
+							coreRunner.syncToTick(this.iframe);
+							coreSynced = true;
+						}
+					}
+					if (this.core_mode && TD.eventManager && TD.eventManager.step) {
+						TD.eventManager.step();
+					}
+				}
+
+				if (this.core_mode && coreSynced && TD.coreSync && TD.coreSync.sync) {
+					TD.coreSync.sync();
 				}
 
 				this.stage.render();
@@ -297,6 +344,7 @@ var _TD = {
 			setupDomControls: function () {
 				var btnNormal = TD.lang.$e("td-btn-normal");
 				var btnLeaderboard = TD.lang.$e("td-btn-leaderboard");
+				var btnSubmit = TD.lang.$e("td-btn-submit");
 				var submitStatus = TD.lang.$e("td-submit-status");
 
 				if (btnNormal) {
@@ -305,7 +353,11 @@ var _TD = {
 				if (btnLeaderboard) {
 					btnLeaderboard.onclick = this.startLeaderboardGame.bind(this);
 				}
+				if (btnSubmit) {
+					btnSubmit.onclick = this.submitScore.bind(this);
+				}
 				this.submitStatusEl = submitStatus;
+				this.submitButtonEl = btnSubmit;
 			},
 
 			startNormalGame: function () {
@@ -314,20 +366,36 @@ var _TD = {
 				this.attempt_id = null;
 				this.start();
 				if (this.submitStatusEl) this.submitStatusEl.textContent = "";
+				if (this.submitButtonEl) this.submitButtonEl.disabled = true;
 			},
 
 			startLeaderboardGame: function () {
 				this.game_mode = "leaderboard";
+				if (this.submitButtonEl) this.submitButtonEl.disabled = true;
 				if (this.submitStatusEl) this.submitStatusEl.textContent = "Requesting seed...";
+				if (this.is_debug && window.console && console.log) {
+					console.log("[leaderboard] requesting seed");
+				}
 				var onReady = function () {
 					this.apiClient.startGame(this.rulesVersion).then(function (res) {
 						this.attempt_id = res.attempt_id;
 						this.seed = res.seed;
 						this.use_server_seed = true;
 						this.start();
+						if (this.submitButtonEl) this.submitButtonEl.disabled = false;
 						if (this.submitStatusEl) this.submitStatusEl.textContent = "Attempt ready";
+						if (this.is_debug && window.console && console.log) {
+							console.log("[leaderboard] attempt ready", {
+								attempt_id: this.attempt_id,
+								seed: this.seed,
+								rules_version: this.rulesVersion
+							});
+						}
 					}.bind(this)).catch(function (err) {
 						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Start failed";
+						if (this.is_debug && window.console && console.log) {
+							console.log("[leaderboard] start failed", err);
+						}
 					}.bind(this));
 				}.bind(this);
 
@@ -341,27 +409,51 @@ var _TD = {
 			},
 
 			submitScore: function () {
-				if (!this.attempt_id || !this.recorder || !this.recorder.result) return;
+				if (!this.attempt_id) {
+					if (this.submitStatusEl) this.submitStatusEl.textContent = "No attempt id";
+					if (this.is_debug && window.console && console.log) {
+						console.log("[submit] missing attempt id");
+					}
+					return;
+				}
+				if (!this.recorder || !this.recorder.result) {
+					if (this.submitStatusEl) this.submitStatusEl.textContent = "No recorder result";
+					if (this.is_debug && window.console && console.log) {
+						console.log("[submit] missing recorder result");
+					}
+					return;
+				}
 				var payload = {
 					attempt_id: this.attempt_id,
 					rules_version: this.rulesVersion,
 					score_claim: this.recorder.result.score,
 					level_claim: this.recorder.result.wave,
+					end_tick: this.recorder.result.endTick,
+					money: this.recorder.result.money,
 					actions: this.recorder.actions
 				};
 
 				if (this.submitStatusEl) this.submitStatusEl.textContent = "Submitting...";
+				if (this.is_debug && window.console && console.log) {
+					console.log("[submit] payload", payload);
+				}
 				var submit = function () {
 					this.apiClient.submitScore(payload).then(function (res) {
 						this.last_submit_result = res;
 						if (this.submitStatusEl) {
 							this.submitStatusEl.textContent = res.success ? "Submitted" : ("Rejected: " + res.reason);
 						}
+						if (this.is_debug && window.console && console.log) {
+							console.log("[submit] result", res);
+						}
 						if (this.leaderboardUI) {
 							this.leaderboardUI.refresh();
 						}
 					}.bind(this)).catch(function (err) {
 						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Submit failed";
+						if (this.is_debug && window.console && console.log) {
+							console.log("[submit] failed", err);
+						}
 					}.bind(this));
 				}.bind(this);
 
@@ -401,6 +493,12 @@ var _TD = {
 		}
 		delete this.a;
 
+		if (typeof __TD_HEADLESS_RULES_VERSION__ !== "undefined" && __TD_HEADLESS_RULES_VERSION__) {
+			if (TD.rulesManager && TD.rulesManager.setVersion) {
+				TD.rulesManager.setVersion(__TD_HEADLESS_RULES_VERSION__);
+			}
+		}
+		this.runtime = TD;
 		TD.init(td_board);
 	}
 };

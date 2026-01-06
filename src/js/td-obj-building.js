@@ -117,7 +117,7 @@ _TD.a.push(function (TD) {
 			}
 
 			// 如果是选中 / 取消选中主地图上的建筑，显示 / 隐藏对应的操作按钮
-			if (this.map.is_main_map) {
+			if (this.map.is_main_map && this.scene.panel) {
 				if (this.map.selected_building) {
 					this.scene.panel.btn_upgrade.show();
 					this.scene.panel.btn_sell.show();
@@ -133,16 +133,27 @@ _TD.a.push(function (TD) {
 		 * 生成、更新升级按钮的说明文字
 		 */
 		updateBtnDesc: function () {
+			if (!this.scene.panel) return;
+			var coreEntity = null;
+			if (window.CoreRunner && window.CoreRunner.getState && this.entityId) {
+				var coreState = window.CoreRunner.getState();
+				if (coreState && coreState.entities) {
+					coreEntity = coreState.entities[this.entityId] || null;
+				}
+			}
+			var nextLevel = coreEntity ? coreEntity.level + 1 : (this.level + 1);
+			var upgradeCost = coreEntity ? coreEntity.upgradeCost : this.getUpgradeCost();
+			var sellMoney = coreEntity ? coreEntity.sellMoney : this.getSellMoney();
 			this.scene.panel.btn_upgrade.desc = TD._t(
 				"upgrade", [
 					TD._t("building_name_" + this.type),
-					this.level + 1,
-					this.getUpgradeCost()
+					nextLevel,
+					upgradeCost
 				]);
 			this.scene.panel.btn_sell.desc = TD._t(
 				"sell", [
 					TD._t("building_name_" + this.type),
-					this.getSellMoney()
+					sellMoney
 				]);
 		},
 
@@ -314,7 +325,9 @@ _TD.a.push(function (TD) {
 				msg = error.message;
 			}
 
-			this.scene.panel.balloontip.msg(msg, btn);
+			if (this.scene.panel) {
+				this.scene.panel.balloontip.msg(msg, btn);
+			}
 		},
 
 		tryToSell: function () {
@@ -326,7 +339,9 @@ _TD.a.push(function (TD) {
 					entityId: this.entityId
 				}, false);
 			} catch (error) {
-				this.scene.panel.balloontip.msg(error.message, this);
+				if (this.scene.panel) {
+					this.scene.panel.balloontip.msg(error.message, this);
+				}
 			}
 		},
 
@@ -395,11 +410,13 @@ _TD.a.push(function (TD) {
 				msg = TD._t("building_intro_" + this.type, [TD.getDefaultBuildingAttributes(this.type).cost]);
 			}
 
-			this.scene.panel.balloontip.msg(msg, this.grid);
+			if (this.scene.panel) {
+				this.scene.panel.balloontip.msg(msg, this.grid);
+			}
 		},
 
 		onOut: function () {
-			if (this.scene.panel.balloontip.el == this.grid) {
+			if (this.scene.panel && this.scene.panel.balloontip.el == this.grid) {
 				this.scene.panel.balloontip.hide();
 			}
 		},

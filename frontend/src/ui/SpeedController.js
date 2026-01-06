@@ -4,7 +4,7 @@
 class SpeedController {
   constructor(tickClock) {
     this.tickClock = tickClock;
-    this.speeds = [1, 2, 4, 8];
+    this.speeds = [1, 2, 4, 8, 16, 32];
     this.currentSpeedIndex = 0;
   }
 

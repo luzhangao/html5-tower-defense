@@ -3,11 +3,14 @@
  */
 
 import TickClock from './core/TickClock';
+import { BrowserRunner, DebugRenderer } from './core-engine';
 
 // 全局游戏对象
 const TD = {
   version: '2.0.0',
   tickClock: null,
+  coreRunner: null,
+  coreDebug: null,
   lastFrameTime: 0,
   isRunning: false,
 
@@ -20,6 +23,8 @@ const TD = {
 
     // 初始化Tick时钟（24 tps）
     this.tickClock = new TickClock(24);
+    this.coreRunner = new BrowserRunner({ seed: Date.now(), rulesVersion: '1.0.0', tickRate: 24 });
+    this.coreDebug = new DebugRenderer({ runner: this.coreRunner });
 
     // TODO: 初始化其他系统
     // - RandomGenerator
@@ -43,6 +48,12 @@ const TD = {
     this.isRunning = true;
     this.lastFrameTime = performance.now();
     this.gameLoop(this.lastFrameTime);
+    if (this.coreRunner) {
+      this.coreRunner.start();
+    }
+    if (this.coreDebug) {
+      this.coreDebug.start();
+    }
 
     console.log('游戏循环已启动');
   },
@@ -103,6 +114,12 @@ const TD = {
    */
   stop() {
     this.isRunning = false;
+    if (this.coreRunner) {
+      this.coreRunner.stop();
+    }
+    if (this.coreDebug) {
+      this.coreDebug.stop();
+    }
     console.log('游戏循环已停止');
   },
 
@@ -128,6 +145,26 @@ const TD = {
 // 暴露到全局（开发阶段）
 if (typeof window !== 'undefined') {
   window.TD = TD;
+  window.CoreRunner = {
+    placeLMG() {
+      if (TD.coreRunner) {
+        TD.coreRunner.queueAction({ t: TD.coreRunner.engine.state.tick + 1, op: 'place', entityType: 'LMG' });
+      }
+    },
+    upgrade(id) {
+      if (TD.coreRunner) {
+        TD.coreRunner.queueAction({ t: TD.coreRunner.engine.state.tick + 1, op: 'upgrade', entityId: id });
+      }
+    },
+    sell(id) {
+      if (TD.coreRunner) {
+        TD.coreRunner.queueAction({ t: TD.coreRunner.engine.state.tick + 1, op: 'sell', entityId: id });
+      }
+    },
+    getState() {
+      return TD.coreRunner ? TD.coreRunner.engine.getFinalState() : null;
+    }
+  };
 }
 
 // 自动初始化（可选）

@@ -131,9 +131,13 @@ _TD.a.push(function (TD) {
 		 */
 		rndSort: function (list) {
 			var a = list.concat();
-			return a.sort(function () {
-				return TD_RANDOM.next() - 0.5;
-			});
+			for (var i = a.length - 1; i > 0; i--) {
+				var j = Math.floor(TD_RANDOM.next() * (i + 1));
+				var tmp = a[i];
+				a[i] = a[j];
+				a[j] = tmp;
+			}
+			return a;
 		},
 
 		_rndRGB2: function (v) {
@@ -181,6 +185,14 @@ _TD.a.push(function (TD) {
 				a.push(chars.substr(r, 1));
 			}
 			return a.join("");
+		},
+
+		/**
+		 * 生成一个不影响随机序列的 UI-only ID
+		 */
+		uiId: function (prefix) {
+			this._ui_id_counter = (this._ui_id_counter || 0) + 1;
+			return (prefix || "ui") + "-" + this._ui_id_counter;
 		},
 
 		/**

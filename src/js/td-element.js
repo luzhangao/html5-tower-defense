@@ -20,7 +20,14 @@ _TD.a.push(function (TD) {
 	 * @param cfg {Object} 元素的配置信息
 	 */
 	TD.Element = function (id, cfg) {
-		this.id = id || ("el-" + TD.lang.rndStr());
+		// Use sequential ID instead of random to avoid RNG consumption
+		if (!id) {
+			if (typeof TD._element_id_counter === "undefined") {
+				TD._element_id_counter = 0;
+			}
+			id = "el-" + (++TD._element_id_counter);
+		}
+		this.id = id;
 		this.cfg = cfg || {};
 
 		this.is_valid = true;

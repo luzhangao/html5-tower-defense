@@ -21,6 +21,63 @@ _TD.a.push(function (TD) {
 			throw new Error("Too many actions in single tick");
 		}
 
+		// 记录执行前的RNG状态
+		var rngBefore = TD.getRandom ? TD.getRandom().getCallCount() : 0;
+
+		// 回放时验证RNG状态
+		if (isReplay && action.rngBefore !== undefined) {
+			if (rngBefore !== action.rngBefore) {
+				console.warn("[RNG Mismatch] Action at tick " + action.t +
+					": expected RNG=" + action.rngBefore + ", actual=" + rngBefore);
+			}
+		}
+
+		if (!isReplay && TD.core_mode && window.CoreRunner && window.CoreRunner.getRunner) {
+			var runner = window.CoreRunner.getRunner();
+			if (runner && runner.engine) {
+				var coreAction = TD.lang.mix({}, action, true);
+				var beforeIds = Object.keys(runner.engine.state.entities || {});
+				var coreTick = runner.engine.state ? runner.engine.state.tick : 0;
+				if (typeof coreAction.t === "number" && coreAction.t > coreTick && runner.engine.runToTick) {
+					runner.engine.runToTick(coreAction.t);
+					coreTick = runner.engine.state ? runner.engine.state.tick : coreTick;
+				}
+				if (runner.engine.state && runner.engine.state.isGameOver) {
+					throw new Error("Game is over");
+				}
+				try {
+					runner.engine.applyAction(coreAction);
+				} catch (coreError) {
+					throw coreError;
+				}
+
+				this.lastActionTick = action.t;
+
+				var rngAfterCore = TD.getRandom ? TD.getRandom().getCallCount() : 0;
+				if (td.recorder) {
+					var recordedCore = TD.lang.mix({}, coreAction, true);
+					var afterIds = Object.keys(runner.engine.state.entities || {});
+					if (!recordedCore.entityId && coreAction.op === "place") {
+						for (var idx = 0; idx < afterIds.length; idx++) {
+							if (beforeIds.indexOf(afterIds[idx]) === -1) {
+								recordedCore.entityId = afterIds[idx];
+								break;
+							}
+						}
+					}
+					recordedCore.rngBefore = rngBefore;
+					recordedCore.rngAfter = rngAfterCore;
+					td.recorder.record(recordedCore);
+				}
+
+				if (TD.coreSync && TD.coreSync.sync) {
+					TD.coreSync.sync();
+				}
+
+				return { entityId: coreAction.entityId || null };
+			}
+		}
+
 		switch (action.op) {
 			case "place":
 				this.validatePlace(action, isReplay);
@@ -38,12 +95,43 @@ _TD.a.push(function (TD) {
 		var result = this.execute(action, isReplay);
 		this.lastActionTick = action.t;
 
+		// 记录执行后的RNG状态
+		var rngAfter = TD.getRandom ? TD.getRandom().getCallCount() : 0;
+
+		var recorded = null;
 		if (!isReplay && td.recorder) {
-			var recorded = TD.lang.mix({}, action, true);
+			recorded = TD.lang.mix({}, action, true);
 			if (result && result.entityId) {
 				recorded.entityId = result.entityId;
 			}
+			// 记录RNG状态
+			recorded.rngBefore = rngBefore;
+			recorded.rngAfter = rngAfter;
 			td.recorder.record(recorded);
+		}
+
+		if (!isReplay && window.CoreRunner && window.CoreRunner.getRunner) {
+			var runner = window.CoreRunner.getRunner();
+			if (runner && runner.engine) {
+				var coreAction = TD.lang.mix({}, recorded || action, true);
+				if (result && result.entityId) {
+					coreAction.entityId = result.entityId;
+				}
+				var coreTick = runner.engine.state ? runner.engine.state.tick : 0;
+				if (typeof coreAction.t === "number" && coreAction.t <= coreTick) {
+					runner.engine.applyAction(coreAction);
+				} else {
+					runner.queueAction(coreAction);
+				}
+			}
+		}
+
+		// 回放时验证执行后的RNG状态
+		if (isReplay && action.rngAfter !== undefined) {
+			if (rngAfter !== action.rngAfter) {
+				console.warn("[RNG Mismatch] After action at tick " + action.t +
+					": expected RNG=" + action.rngAfter + ", actual=" + rngAfter);
+			}
 		}
 
 		return result;
@@ -164,9 +252,11 @@ _TD.a.push(function (TD) {
 		building.map.selected_building = null;
 		building.map.select_hl.hide();
 		building.map.checkHasWeapon();
-		building.scene.panel.btn_upgrade.hide();
-		building.scene.panel.btn_sell.hide();
-		building.scene.panel.balloontip.hide();
+		if (building.scene.panel) {
+			building.scene.panel.btn_upgrade.hide();
+			building.scene.panel.btn_sell.hide();
+			building.scene.panel.balloontip.hide();
+		}
 		td.entityManager.remove(action.entityId, td.getCurrentTick());
 		return { entityId: action.entityId };
 	};

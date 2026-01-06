@@ -268,28 +268,38 @@ _TD.a.push(function (TD) {
 		/**
 		 * 清空场景
 		 */
-		clear: function () {
-			// 清空本 scene 中引用的所有对象以回收内存
-			TD.lang.shift(this._step_elements, function (obj) {
-				TD.lang.shift(obj, function (obj2) {
-					// element
-					//delete this.scene;
-					obj2.del();
-//				delete this;
-				});
-//			delete this;
-			});
-			TD.lang.shift(this._render_elements, function (obj) {
-				TD.lang.shift(obj, function (obj2) {
-					// element
-					//delete this.scene;
-					obj2.del();
-//				delete this;
-				});
-//			delete this;
-			});
-//		delete this;
-		},
+			clear: function () {
+				// 清空本 scene 中引用的所有对象以回收内存
+				for (var i = 0; i < this._step_elements.length; i++) {
+					var stepList = this._step_elements[i] || [];
+					for (var j = 0; j < stepList.length; j++) {
+						var el = stepList[j];
+						if (!el) continue;
+						if (typeof el.del === "function") {
+							el.del();
+						} else if (typeof el.remove === "function") {
+							el.remove();
+						}
+					}
+				}
+				for (var k = 0; k < this._render_elements.length; k++) {
+					var renderList = this._render_elements[k] || [];
+					for (var m = 0; m < renderList.length; m++) {
+						var rEl = renderList[m];
+						if (!rEl) continue;
+						if (typeof rEl.del === "function") {
+							rEl.del();
+						} else if (typeof rEl.remove === "function") {
+							rEl.remove();
+						}
+					}
+				}
+				// 重新初始化容器，避免后续 addElement 访问到空引用
+				this._step_elements = [[], [], []];
+				this._render_elements = [
+					[], [], [], [], [], [], [], [], [], []
+				];
+			},
 		queue: function (f) {
 			this.end_queue.push(f);
 		},
@@ -298,17 +308,34 @@ _TD.a.push(function (TD) {
 			this.pause();
 			this.is_gameover = true;
 
-			if (TD.ScoringSystem && TD.rulesManager) {
-				var endTick = TD.getCurrentTick();
-				var finalState = {
-					wave: this.wave,
-					endTick: endTick,
-					missedMonsters: TD.missed_monsters || 0,
-					money: TD.money || 0
-				};
-				var scoringResult = TD.ScoringSystem.calculateFinalScore(finalState, TD.rulesManager.getRules());
-				TD.score = scoringResult.total;
-				TD.score_breakdown = scoringResult.breakdown;
+				if (TD.ScoringSystem && TD.rulesManager) {
+					var coreState = null;
+					if (TD.core_mode && typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.getState) {
+						coreState = window.CoreRunner.getState();
+					}
+					var endTick = coreState ? coreState.endTick : TD.getCurrentTick();
+					var finalState = {
+						wave: coreState ? coreState.wave : this.wave,
+						endTick: endTick,
+						missedMonsters: coreState ? coreState.missedMonsters : (TD.missed_monsters || 0),
+						money: coreState ? coreState.money : (TD.money || 0)
+					};
+					var scoringResult = coreState && coreState.breakdown
+						? { total: coreState.score, breakdown: coreState.breakdown }
+						: TD.ScoringSystem.calculateFinalScore(finalState, TD.rulesManager.getRules());
+					this.wave = finalState.wave;
+					TD.missed_monsters = finalState.missedMonsters;
+					TD.money = finalState.money;
+					TD.score = scoringResult.total;
+					TD.score_breakdown = scoringResult.breakdown;
+				if (TD.is_debug && window.console && console.log) {
+					console.log("[score] finalState", finalState);
+					console.log("[score] breakdown", scoringResult.breakdown);
+					console.log("[score] total", scoringResult.total);
+					if (window.TD_RANDOM && window.TD_RANDOM.getCallCount) {
+						console.log("[score] rng calls", window.TD_RANDOM.getCallCount());
+					}
+				}
 				if (TD.recorder) {
 					TD.recorder.finalize({
 						score: TD.score,

@@ -1,155 +1,232 @@
 /**
- * HeadlessEngine - minimal deterministic validator for Node verifier.
- * TODO: replace with full game simulation.
+ * LegacyHeadlessEngine - runs the legacy game logic in Node for verifier.
+ *
+ * This loads legacy scripts in a shared VM context and drives ticks manually.
  */
-import { RandomGenerator } from '../core/RandomGenerator.js';
-import RulesManager from '../systems/RulesManager.js';
-import ScoringSystem from '../systems/ScoringSystem.js';
+import fs from 'fs';
+import path from 'path';
+import vm from 'vm';
 
-class HeadlessEngine {
-  constructor({ seed, rulesVersion, gridWidth = 16, gridHeight = 16, startMoney = 500 } = {}) {
+const SCRIPT_ORDER = [
+  'td.js',
+  'td-random.js',
+  'td-tick-clock.js',
+  'td-rules-manager.js',
+  'td-entity-manager.js',
+  'td-recorder.js',
+  'td-action-dispatcher.js',
+  'td-scoring-system.js',
+  'td-speed-controller.js',
+  'td-audio.js',
+  'td-lang.js',
+  'td-event.js',
+  'td-stage.js',
+  'td-element.js',
+  'td-obj-map.js',
+  'td-obj-grid.js',
+  'td-obj-building.js',
+  'td-obj-monster.js',
+  'td-obj-panel.js',
+  'td-data-stage-1.js',
+  'td-cfg-buildings.js',
+  'td-cfg-monsters.js',
+  'td-render-buildings.js',
+  'td-msg-zh.js',
+  'td-walk.js'
+];
+
+function createNoopContext() {
+  const fn = () => {};
+  return {
+    beginPath: fn,
+    closePath: fn,
+    fill: fn,
+    stroke: fn,
+    fillRect: fn,
+    strokeRect: fn,
+    arc: fn,
+    moveTo: fn,
+    lineTo: fn,
+    clearRect: fn,
+    fillText: fn,
+    drawImage: fn
+  };
+}
+
+function setupHeadlessDom() {
+  const ctx = createNoopContext();
+  const canvas = {
+    style: {},
+    getContext: () => ctx,
+    setAttribute: () => {},
+    getElementsByTagName: () => []
+  };
+  const board = {
+    getElementsByTagName: () => [canvas]
+  };
+
+  if (!globalThis.window) {
+    globalThis.window = globalThis;
+  }
+  globalThis.document = {
+    getElementById: () => board,
+    createElement: () => ({ setAttribute: () => {} }),
+    documentElement: { scrollLeft: 0, scrollTop: 0 },
+    body: { scrollLeft: 0, scrollTop: 0 },
+    addEventListener: () => {},
+    removeEventListener: () => {}
+  };
+  if (!globalThis.navigator) {
+    try {
+      Object.defineProperty(globalThis, 'navigator', {
+        value: { userAgent: 'node' },
+        configurable: true
+      });
+    } catch (error) {
+      // ignore if navigator is read-only
+    }
+  }
+  globalThis.localStorage = {
+    getItem: () => null,
+    setItem: () => {}
+  };
+  globalThis.Audio = function () {
+    return {
+      paused: true,
+      ended: true,
+      currentTime: 0,
+      volume: 0,
+      play: () => Promise.resolve()
+    };
+  };
+  globalThis.performance = {
+    now: () => Date.now()
+  };
+  globalThis.requestAnimationFrame = () => 0;
+  globalThis.cancelAnimationFrame = () => {};
+}
+
+function loadLegacyScripts(baseDir) {
+  SCRIPT_ORDER.forEach((file) => {
+    const filePath = path.resolve(baseDir, 'src/js', file);
+    const code = fs.readFileSync(filePath, 'utf8');
+    vm.runInThisContext(code, { filename: filePath });
+  });
+}
+
+class LegacyHeadlessEngine {
+  constructor({ seed, rulesVersion } = {}) {
     if (seed === undefined || seed === null) {
       throw new Error('seed required');
     }
-    this.seed = seed;
-    this.rulesManager = new RulesManager();
-    if (rulesVersion) {
-      this.rulesManager.setVersion(rulesVersion);
+    setupHeadlessDom();
+    globalThis.__TD_HEADLESS__ = true;
+    globalThis.__TD_HEADLESS_SEED__ = seed;
+    globalThis.__TD_HEADLESS_RULES_VERSION__ = rulesVersion || null;
+
+    const baseDir = path.resolve(__dirname, '..', '..');
+    loadLegacyScripts(baseDir);
+
+    if (!globalThis._TD || !globalThis._TD.init) {
+      throw new Error('Legacy TD init not found');
     }
-    this.rules = this.rulesManager.getRules();
-    this.random = new RandomGenerator(seed);
-    this.gridWidth = gridWidth;
-    this.gridHeight = gridHeight;
-    this.money = startMoney;
-    this.currentTick = 0;
-    this.entities = new Map();
-    this.nextEntityId = 1;
-    this.occupied = new Set();
-    this.actionsPerTick = new Map();
-  }
 
-  _gridKey(pos) {
-    return `${pos[0]},${pos[1]}`;
-  }
-
-  _ensureTick(action) {
-    if (action.t < this.currentTick) {
-      throw new Error('Tick must be monotonically increasing');
+    globalThis._TD.init('td-board', true);
+    this.TD = globalThis._TD.runtime;
+    if (!this.TD) {
+      throw new Error('Legacy TD runtime not exposed');
     }
+    this.scene = this.TD.stage.current_act.current_scene;
+    this.maxTicks = 100000;
+    this.TD.game_mode = 'normal';
   }
 
-  _recordTick(action) {
-    const count = this.actionsPerTick.get(action.t) || 0;
-    if (count >= 2) {
-      throw new Error('Too many actions in single tick');
+  _stepOneTick() {
+    const nextTick = this.TD.getCurrentTick() + 1;
+    this.TD.tickClock.currentTick = nextTick;
+    this.TD.iframe = nextTick;
+    this.TD.stage.step();
+  }
+
+  advanceToTick(targetTick) {
+    while (this.TD.getCurrentTick() < targetTick && !this.scene.is_gameover) {
+      this._stepOneTick();
+      if (this.TD.getCurrentTick() > this.maxTicks) {
+        throw new Error('Game too long (>100000 ticks)');
+      }
     }
-    this.actionsPerTick.set(action.t, count + 1);
-  }
-
-  _validatePos(pos) {
-    if (!pos || pos.length !== 2) return false;
-    return pos[0] >= 0 && pos[0] < this.gridWidth && pos[1] >= 0 && pos[1] < this.gridHeight;
-  }
-
-  _allocateId() {
-    return `E${this.nextEntityId++}`;
-  }
-
-  _getBuildingConfig(type) {
-    return this.rules.buildings[type] || null;
   }
 
   applyAction(action) {
-    this._ensureTick(action);
-    this._recordTick(action);
-    this.currentTick = action.t;
-
-    if (action.op === 'place') {
-      if (!this._validatePos(action.pos)) throw new Error('Invalid grid position');
-      const key = this._gridKey(action.pos);
-      if (this.occupied.has(key)) throw new Error('Grid not buildable');
-      const cfg = this._getBuildingConfig(action.entityType);
-      if (!cfg) throw new Error('Invalid building type');
-      const cost = cfg.cost || 0;
-      if (this.money < cost) throw new Error('Not enough money');
-
-      const entityId = action.entityId || this._allocateId();
-      if (this.entities.has(entityId)) throw new Error('Entity ID already exists');
-      this.money -= cost;
-      this.entities.set(entityId, {
-        id: entityId,
-        type: action.entityType,
-        pos: action.pos,
-        level: 0,
-        moneySpent: cost,
-        active: true
-      });
-      this.occupied.add(key);
-      return { entityId };
-    }
-
-    if (action.op === 'upgrade') {
-      const entity = this.entities.get(action.entityId);
-      if (!entity || !entity.active) throw new Error('Invalid entity');
-      const cost = Math.floor(entity.moneySpent * 0.75) || 1;
-      if (this.money < cost) throw new Error('Not enough money');
-      this.money -= cost;
-      entity.moneySpent += cost;
-      entity.level += 1;
-      return { entityId: action.entityId };
-    }
-
-    if (action.op === 'sell') {
-      const entity = this.entities.get(action.entityId);
-      if (!entity || !entity.active) throw new Error('Invalid entity');
-      const sellValue = Math.floor(entity.moneySpent * 0.5) || 1;
-      this.money += sellValue;
-      entity.active = false;
-      const key = this._gridKey(entity.pos);
-      this.occupied.delete(key);
-      return { entityId: action.entityId };
-    }
-
-    throw new Error('Unknown action');
+    this.advanceToTick(action.t);
+    this.TD.actionDispatcher.dispatch(action, true);
   }
 
-  getFinalState(claimedLevel) {
-    const wave = typeof claimedLevel === 'number' ? claimedLevel : 0;
+  runWithActions(actions) {
+    let index = 0;
+    let currentTick = this.TD.getCurrentTick();
+
+    while (index < actions.length && actions[index].t === currentTick) {
+      this.TD.actionDispatcher.dispatch(actions[index], true);
+      index++;
+    }
+
+    while (!this.scene.is_gameover && currentTick < this.maxTicks) {
+      const nextTick = currentTick + 1;
+      this.TD.tickClock.currentTick = nextTick;
+      this.TD.iframe = nextTick;
+
+      while (index < actions.length && actions[index].t === nextTick) {
+        this.TD.actionDispatcher.dispatch(actions[index], true);
+        index++;
+      }
+
+      this.TD.stage.step();
+      currentTick = nextTick;
+    }
+  }
+
+  runToGameOver() {
+    while (!this.scene.is_gameover && this.TD.getCurrentTick() < this.maxTicks) {
+      this._stepOneTick();
+    }
+  }
+
+  getFinalState() {
     return {
-      wave,
-      endTick: this.currentTick,
-      missedMonsters: 0,
-      money: this.money
+      score: this.TD.score,
+      wave: this.scene.wave,
+      endTick: this.TD.getCurrentTick(),
+      missedMonsters: this.TD.missed_monsters || 0,
+      money: this.TD.money || 0,
+      breakdown: this.TD.score_breakdown || null
     };
   }
 }
 
 function verifyReplay({ seed, rulesVersion, actions, claimedScore, claimedLevel }) {
-  const engine = new HeadlessEngine({ seed, rulesVersion });
+  const engine = new LegacyHeadlessEngine({ seed, rulesVersion });
+
   if (Array.isArray(actions)) {
-    for (let i = 0; i < actions.length; i++) {
-      engine.applyAction(actions[i]);
-      if (engine.currentTick > 100000) {
-        return { valid: false, error: 'Game too long (>100000 ticks)' };
-      }
-    }
+    engine.runWithActions(actions);
+  } else {
+    engine.runToGameOver();
   }
-
-  const finalState = engine.getFinalState(claimedLevel);
-  const scoringResult = ScoringSystem.calculateFinalScore(finalState, engine.rules);
-
-  const score = scoringResult.total;
+  const finalState = engine.getFinalState();
+  const valid = typeof claimedScore === 'number' ? finalState.score === claimedScore : true;
   const level = finalState.wave;
 
-  const valid = typeof claimedScore === 'number' ? score === claimedScore : true;
+  if (typeof claimedLevel === 'number' && claimedLevel !== level) {
+    return { valid: false, error: 'Level mismatch', score: finalState.score, level };
+  }
 
   return {
     valid,
-    score,
+    score: finalState.score,
     level,
-    breakdown: scoringResult.breakdown,
+    breakdown: finalState.breakdown || {},
     error: valid ? null : 'Score mismatch'
   };
 }
 
-export { HeadlessEngine, verifyReplay };
+export { LegacyHeadlessEngine, verifyReplay };

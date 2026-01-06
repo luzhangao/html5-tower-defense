@@ -4,7 +4,7 @@ let Engine = null;
 try {
   Engine = require('./engine-bundle.js');
 } catch (error) {
-  // engine bundle not built yet
+  console.error('[verifier] engine bundle load failed:', error.message);
 }
 
 const app = express();
@@ -28,6 +28,13 @@ app.post('/api/verify', (req, res) => {
       return res.status(400).json({ valid: false, error: 'Missing required parameters' });
     }
 
+    console.log('[verifier] verify request', {
+      seed,
+      rulesVersion,
+      claimedScore,
+      claimedLevel,
+      actions: Array.isArray(actions) ? actions.length : 0
+    });
     const result = Engine.verifyReplay({
       seed,
       rulesVersion,
@@ -36,8 +43,10 @@ app.post('/api/verify', (req, res) => {
       claimedLevel
     });
 
+    console.log('[verifier] verify result', result);
     res.json(result);
   } catch (error) {
+    console.error('[verifier] error:', error);
     res.status(500).json({ valid: false, error: error.message });
   }
 });

@@ -16,7 +16,7 @@ _TD.a.push(function (TD) {
 	TickClock.prototype.update = function (deltaTime) {
 		if (this.isPaused) return [];
 		deltaTime = Math.min(deltaTime, 100);
-		this.accumulator += deltaTime;
+		this.accumulator += deltaTime * this.gameSpeed;
 
 		var ticksToProcess = [];
 		var maxTicksPerFrame = Math.max(1, Math.floor(this.gameSpeed));
@@ -37,7 +37,7 @@ _TD.a.push(function (TD) {
 	};
 
 	TickClock.prototype.setGameSpeed = function (speed) {
-		if (speed !== 1 && speed !== 2 && speed !== 4 && speed !== 8) {
+		if (speed !== 1 && speed !== 2 && speed !== 4 && speed !== 8 && speed !== 16 && speed !== 32) {
 			speed = 1;
 		}
 		this.gameSpeed = speed;
