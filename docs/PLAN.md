@@ -1255,16 +1255,16 @@ class AntiCheatService:
 ### 阶段6：文档编写
 
 #### 步骤6.1：用户文档
-- [ ] 编写README.md（运行说明）
-- [ ] 编写游戏规则说明
+- [x] 编写README.md（运行说明）
+- [x] 编写游戏规则说明
 
 **涉及文件**：
 - 新建：`docs/README.md`
 
 #### 步骤6.2：技术文档
-- [ ] 编写SPEC.md（游戏规则和需求）
-- [ ] 编写ARCHITECTURE.md（架构设计）
-- [ ] 编写SECURITY.md（防作弊策略）
+- [x] 编写SPEC.md（游戏规则和需求）
+- [x] 编写ARCHITECTURE.md（架构设计）
+- [x] 编写SECURITY.md（防作弊策略）
 
 **涉及文件**：
 - 新建：`docs/SPEC.md`
@@ -1272,9 +1272,9 @@ class AntiCheatService:
 - 新建：`docs/SECURITY.md`
 
 #### 步骤6.3：AI使用文档（重点）
-- [ ] 记录每个关键步骤的Prompt
-- [ ] 记录验收标准
-- [ ] 记录修正过程
+- [x] 记录每个关键步骤的Prompt
+- [x] 记录验收标准
+- [x] 记录修正过程
 
 **涉及文件**：
 - 新建：`docs/AI_USAGE.md`

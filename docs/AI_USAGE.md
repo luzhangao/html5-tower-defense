@@ -165,3 +165,22 @@
   - 保持 `ScoringSystem` 作为非 core 模式的回退计算。
 - 验收:
   - 放置墙体后提交分数不再出现 `Score mismatch`。
+
+## 阶段5 工作记录
+### 测试配置与通过
+- Prompt: “继续 step5，完成前后端测试。”
+- 操作:
+  - 前端：配置 Jest + Babel，补齐单元测试（TickClock/RandomGenerator/ActionSystem/Recorder）。
+  - 后端：配置 pytest 并补齐 API/服务层测试，修复测试数据库初始化流程。
+- 验收:
+  - `frontend` 的 `npm test` 通过。
+  - `backend` 的 `pytest backend/tests` 通过。
+
+## 阶段6 工作记录
+### 文档补齐
+- Prompt: “继续 step6，补齐文档并更新计划。”
+- 操作:
+  - 新增 `docs/README.md`（运行说明）、`docs/SPEC.md`、`docs/ARCHITECTURE.md`、`docs/SECURITY.md`。
+  - 在 `docs/PLAN.md` 标记文档完成项。
+- 验收:
+  - 文档创建并与当前实现一致。
