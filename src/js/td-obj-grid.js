@@ -55,9 +55,6 @@ _TD.a.push(function (TD) {
 				return true;
 			}
 
-			// Debug: 记录checkBlock调用
-			console.log("[checkBlock] grid [" + this.mx + "," + this.my + "] on map " + this.map.id);
-
 			var is_blocked,
 				_this = this,
 				fw = new TD.FindWay(
@@ -88,6 +85,7 @@ _TD.a.push(function (TD) {
 		 * 购买建筑
 		 * @param building_type {String}
 		 */
+		// Deprecated: legacy direct-purchase flow; use ActionDispatcher instead.
 		buyBuilding: function (building_type) {
 			var cost = TD.getDefaultBuildingAttributes(building_type).cost || 0;
 			if (TD.money >= cost) {

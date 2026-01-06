@@ -122,6 +122,7 @@ _TD.a.push(function (TD) {
 	};
 
 	CoreSync.prototype._syncGlobals = function (state, scene) {
+		// 将 core 状态同步到 legacy 全局变量
 		TD.money = state.money || 0;
 		TD.life = state.life || 0;
 		TD.score = state.score || 0;
@@ -141,6 +142,7 @@ _TD.a.push(function (TD) {
 	};
 
 	CoreSync.prototype._syncBuildings = function (state, scene) {
+		// core -> legacy：同步建筑列表与选中状态
 		var map = scene && scene.map;
 		if (!map) return;
 		var entities = state.entities || {};
@@ -204,6 +206,7 @@ _TD.a.push(function (TD) {
 	};
 
 	CoreSync.prototype._syncMonsters = function (state, scene) {
+		// core -> legacy：同步怪物可视化对象
 		var map = scene && scene.map;
 		if (!map) return;
 		if (map.monsters && map.monsters.length) {
@@ -231,6 +234,7 @@ _TD.a.push(function (TD) {
 	};
 
 	CoreSync.prototype._syncBullets = function (runner, scene) {
+		// core -> legacy：同步子弹与激光效果
 		var map = scene && scene.map;
 		if (!map) return;
 		if (map.bullets && map.bullets.length) {
@@ -277,6 +281,7 @@ _TD.a.push(function (TD) {
 	};
 
 	CoreSync.prototype.sync = function () {
+		// 每帧渲染前执行一次状态镜像
 		var runner = this._getRunner();
 		if (!runner || !runner.engine) return;
 		var scene = TD.stage && TD.stage.current_act && TD.stage.current_act.current_scene;

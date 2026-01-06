@@ -10,10 +10,12 @@ try {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
+// 健康检查
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', core: !!Core });
 });
 
+// 核心验证接口：复跑回放并对比分数
 app.post('/api/verify-core', (req, res) => {
   if (!Core) {
     return res.status(500).json({
@@ -28,7 +30,7 @@ app.post('/api/verify-core', (req, res) => {
       return res.status(400).json({ valid: false, error: 'Missing seed' });
     }
 
-    console.log('[core-verifier] verify request', {
+    console.debug('[core-verifier] verify request', {
       seed,
       rulesVersion,
       actions: Array.isArray(actions) ? actions.length : 0,
@@ -47,7 +49,7 @@ app.post('/api/verify-core', (req, res) => {
       claimedLevel
     });
 
-    console.log('[core-verifier] verify result', result);
+    console.debug('[core-verifier] verify result', result);
     res.json(result);
   } catch (error) {
     const detail = error && error.stack ? error.stack : String(error);

@@ -8,6 +8,7 @@ router = APIRouter(prefix="/api/leaderboard", tags=["leaderboard"])
 
 
 @router.get("")
+# 获取排行榜前 N 名
 def get_leaderboard(limit: int = 100, db: Session = Depends(get_db)):
     entries = (
         db.query(LeaderboardEntry)
@@ -30,6 +31,7 @@ def get_leaderboard(limit: int = 100, db: Session = Depends(get_db)):
 
 
 @router.get("/me")
+# 获取当前用户的排名
 def get_my_rank(user_id: str = Depends(get_user_id), db: Session = Depends(get_db)):
     entries = (
         db.query(LeaderboardEntry)

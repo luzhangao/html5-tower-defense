@@ -3,6 +3,7 @@
  */
 class ScoringSystem {
   static calculateFinalScore(gameState, rules) {
+    // 分数由波次、时间、漏怪与金币余额综合计算
     const { scoring } = rules;
     const base_score = gameState.wave * scoring.base_score_per_wave;
     const time_bonus = Math.max(

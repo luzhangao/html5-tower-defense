@@ -4,6 +4,7 @@
 import CoreEngine from './EngineCore';
 
 function verifyCoreReplay({ seed, rulesVersion, actions, finalTick, claimedScore, claimedLevel, debug }) {
+  // 在本地复跑回放，用于开发或对齐逻辑
   const engine = new CoreEngine({ seed, rulesVersion, debug });
   engine.runWithActions(actions || []);
   if (typeof finalTick === 'number') {

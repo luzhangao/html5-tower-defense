@@ -305,10 +305,12 @@ _TD.a.push(function (TD) {
 		},
 		gameover: function () {
 			if (this.is_gameover) return;
+			// 进入结算流程（只会执行一次）
 			this.pause();
 			this.is_gameover = true;
 
-				if (TD.ScoringSystem && TD.rulesManager) {
+				// 结算分数，core 模式优先读取 CoreRunner 的最终状态
+			if (TD.ScoringSystem && TD.rulesManager) {
 					var coreState = null;
 					if (TD.core_mode && typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.getState) {
 						coreState = window.CoreRunner.getState();
@@ -328,10 +330,10 @@ _TD.a.push(function (TD) {
 					TD.money = finalState.money;
 					TD.score = scoringResult.total;
 					TD.score_breakdown = scoringResult.breakdown;
-					if (TD.is_debug && window.console && console.log) {
-						console.log("[score] finalState", finalState);
-						console.log("[score] breakdown", scoringResult.breakdown);
-						console.log("[score] total", scoringResult.total);
+					if (TD.debugLog) {
+						TD.debugLog("[score] finalState", finalState);
+						TD.debugLog("[score] breakdown", scoringResult.breakdown);
+						TD.debugLog("[score] total", scoringResult.total);
 					}
 				if (TD.recorder) {
 					TD.recorder.finalize({
@@ -345,6 +347,7 @@ _TD.a.push(function (TD) {
 			}
 
 			if (TD.game_mode === "leaderboard") {
+				// 排行榜模式自动提交成绩
 				TD.submitScore();
 			}
 		},

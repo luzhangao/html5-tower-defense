@@ -5,6 +5,7 @@
 // _TD.a.push begin
 _TD.a.push(function (TD) {
 	var RULES_VERSION = "1.0.0";
+	// 规则版本号必须和后端/验证器一致
 
 	var RULES = {
 		"1.0.0": {
@@ -169,6 +170,7 @@ _TD.a.push(function (TD) {
 	};
 
 	RulesManager.prototype.getRules = function () {
+		// 按版本返回固定规则，保证可复现
 		return RULES[this.currentVersion];
 	};
 

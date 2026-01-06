@@ -29,6 +29,7 @@ class ReplayValidator:
         claimed_level: int,
         final_tick: int | None = None,
     ) -> ValidationResult:
+        # 发送给 verifier 的参数，与前端回放保持一致
         payload = {
             "seed": seed,
             "rulesVersion": rules_version,
@@ -39,6 +40,7 @@ class ReplayValidator:
         }
 
         try:
+            # 验证器在 Node 里复跑引擎
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     f"{self.verifier_url}/api/verify-core",

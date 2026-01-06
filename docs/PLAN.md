@@ -1,5 +1,7 @@
 # HTML5 塔防游戏重构实施计划
 
+> 已废弃：此文档为历史实施计划，不再维护，现行说明请以 `docs/ARCHITECTURE.md` 与 `docs/SPEC.md` 为准。
+
 ## 项目概述
 
 这是一个基于原生JavaScript + Canvas的塔防游戏的全面重构项目。目标是添加排行榜功能和完善的防作弊机制，同时将后端从Python2迁移到Python3。
@@ -1295,10 +1297,6 @@ class AntiCheatService:
 #### 步骤7.2：部署测试
 - [x] 本地通过 Docker Compose 完整流程测试
 
-#### 步骤7.2：部署测试
-- [ ] 本地docker-compose测试
-- [ ] 验证前后端通信
-- [ ] 验证数据持久化
 
 ## 关键文件清单
 

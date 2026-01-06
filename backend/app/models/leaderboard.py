@@ -4,6 +4,7 @@ from backend.app.database.connection import Base
 
 
 class LeaderboardEntry(Base):
+    # 排行榜表：每个用户保留一条最高分
     __tablename__ = "leaderboard"
 
     entry_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -12,6 +13,6 @@ class LeaderboardEntry(Base):
     level = Column(Integer, nullable=False)
     money = Column(Integer)
     end_tick = Column(Integer)
-    actions = Column(String, nullable=False)
-    rules_version = Column(String, nullable=False)
+    actions = Column(String, nullable=False)  # 回放 actions（JSON 字符串）
+    rules_version = Column(String, nullable=False)  # 规则版本号
     submitted_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))

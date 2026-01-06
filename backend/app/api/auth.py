@@ -9,6 +9,7 @@ from backend.app.services.auth_service import create_anonymous_identity, verify_
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+# 从请求头校验 token 并返回 user_id
 def get_user_id(authorization: str | None = Header(default=None), db: Session = Depends(get_db)) -> str:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing token")
@@ -26,6 +27,7 @@ def get_user_id(authorization: str | None = Header(default=None), db: Session = 
 
 
 @router.post("/anonymous")
+# 创建匿名用户并返回 token
 def create_anonymous(db: Session = Depends(get_db)):
     user_id, token, token_hash = create_anonymous_identity()
     user = User(user_id=user_id, token_hash=token_hash)

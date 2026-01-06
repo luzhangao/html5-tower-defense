@@ -787,6 +787,7 @@ class BulletCore {
 }
 
 class LegacyEngineCore {
+  // 核心逻辑引擎：在 Node/浏览器中保持确定性
   constructor({ seed, rulesVersion, tickRate, debug } = {}) {
     if (seed === undefined || seed === null) {
       throw new Error('CoreEngine requires seed');
@@ -847,6 +848,7 @@ class LegacyEngineCore {
   }
 
   applyAction(action) {
+    // 立刻应用 action（不会自动推进 tick）
     if (!action || typeof action.t !== 'number') {
       throw new Error('Invalid action: missing tick');
     }
@@ -874,6 +876,7 @@ class LegacyEngineCore {
   }
 
   _processActionsForTick(tick) {
+    // 在指定 tick 执行所有排队的 action
     if (!this.pendingActions.length) return;
     const toApply = [];
     const remaining = [];
@@ -1069,6 +1072,7 @@ class LegacyEngineCore {
   }
 
   stepOneTick() {
+    // 推进 1 个逻辑 tick：处理 action、怪物移动、结算波次
     this.state.tick += 1;
     if (this.state.life <= 0) {
       this.state.life = 0;
@@ -1121,6 +1125,7 @@ class LegacyEngineCore {
   }
 
   finalize() {
+    // 计算最终分数（用于排行榜验证）
     const endTick = this.state.tick;
     const scoring = calculateFinalScore(
       {
@@ -1143,6 +1148,7 @@ class LegacyEngineCore {
   }
 
   getFinalState() {
+    // 返回最终可提交状态（含 score/breakdown）
     const finalResult = this.finalize();
     const baseState = this.getState();
     return {

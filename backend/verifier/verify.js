@@ -10,10 +10,12 @@ try {
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
+// 健康检查
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', engine: !!Engine });
 });
 
+// 旧版验证接口：复跑 legacy 引擎
 app.post('/api/verify', (req, res) => {
   if (!Engine) {
     return res.status(500).json({
@@ -28,7 +30,7 @@ app.post('/api/verify', (req, res) => {
       return res.status(400).json({ valid: false, error: 'Missing required parameters' });
     }
 
-    console.log('[verifier] verify request', {
+    console.debug('[verifier] verify request', {
       seed,
       rulesVersion,
       claimedScore,
@@ -43,7 +45,7 @@ app.post('/api/verify', (req, res) => {
       claimedLevel
     });
 
-    console.log('[verifier] verify result', result);
+    console.debug('[verifier] verify result', result);
     res.json(result);
   } catch (error) {
     console.error('[verifier] error:', error);

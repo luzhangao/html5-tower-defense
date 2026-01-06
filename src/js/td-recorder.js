@@ -13,6 +13,7 @@ _TD.a.push(function (TD) {
 	}
 
 	Recorder.prototype.init = function (seed, rulesVersion) {
+		// 每局开始时重置记录器
 		this.seed = seed;
 		this.rulesVersion = rulesVersion;
 		this.actions = [];
@@ -21,6 +22,7 @@ _TD.a.push(function (TD) {
 	};
 
 	Recorder.prototype.record = function (action) {
+		// 只记录合法 action（每 tick 最多 2 个）
 		var tick = action.t;
 		var count = this._actionsPerTick[tick] || 0;
 		if (count >= 2) {
@@ -35,6 +37,7 @@ _TD.a.push(function (TD) {
 	};
 
 	Recorder.prototype.finalize = function (finalState) {
+		// 游戏结束时写入最终状态（用于提交/验证）
 		this.result = {
 			score: finalState.score,
 			wave: finalState.wave,
@@ -45,6 +48,7 @@ _TD.a.push(function (TD) {
 	};
 
 	Recorder.prototype.export = function () {
+		// 导出给后端验证的完整回放数据
 		return {
 			seed: this.seed,
 			rulesVersion: this.rulesVersion,

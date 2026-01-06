@@ -10,6 +10,7 @@ JWT_EXPIRES_DAYS = 30
 
 
 def create_anonymous_identity() -> tuple[str, str, str]:
+    # 生成匿名用户、JWT 以及 token hash
     user_id = str(uuid.uuid4())
     token = jwt.encode(
         {
@@ -24,5 +25,6 @@ def create_anonymous_identity() -> tuple[str, str, str]:
 
 
 def verify_token(token: str) -> str:
+    # 解码 JWT，返回 user_id
     payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
     return payload.get("sub")

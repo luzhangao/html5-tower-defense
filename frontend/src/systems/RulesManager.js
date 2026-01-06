@@ -2,6 +2,7 @@
  * RulesManager - versioned rules for deterministic validation.
  */
 const RULES_VERSION = '1.0.0';
+// 规则版本号必须和后端/验证器一致
 
 const RULES = {
   '1.0.0': {
@@ -173,6 +174,7 @@ class RulesManager {
   }
 
   getRules() {
+    // 按版本返回固定规则，保证可复现
     return RULES[this.currentVersion];
   }
 

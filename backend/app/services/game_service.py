@@ -17,6 +17,7 @@ class GameService:
         self.logger = logging.getLogger("td_api")
 
     def start_game(self, user_id: str, rules_version: str) -> dict:
+        # 创建一次排行榜尝试：分配 seed 与过期时间
         attempt_id = uuid.uuid4().hex
         seed = uuid.uuid4().int % 2_147_483_647
         now = datetime.now(timezone.utc)
@@ -41,6 +42,7 @@ class GameService:
         }
 
     async def submit_score(self, user_id: str, payload: dict) -> dict:
+        # 提交成绩的完整流程：校验尝试 -> 反作弊 -> 回放验证 -> 写榜
         self.logger.info("submit_score user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
         AntiCheatService.check_rate_limit(user_id, self.db)
 
@@ -83,6 +85,7 @@ class GameService:
         attempt.used_at = datetime.now(timezone.utc)
         self.db.commit()
 
+        # 排行榜入榜阈值：分数过低直接不入榜
         threshold = AntiCheatService.get_entry_threshold(self.db)
         if payload["score_claim"] < threshold:
             self.logger.info(
@@ -100,6 +103,7 @@ class GameService:
             }
 
         self.logger.info("validating replay user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
+        # 调用验证器复算 score/level
         result = await self.validator.validate(
             attempt.seed,
             attempt.rules_version,
@@ -126,6 +130,7 @@ class GameService:
         submission.validated_at = datetime.now(timezone.utc)
         self.db.commit()
 
+        # 同一用户只保留最高分
         entry = self.db.query(LeaderboardEntry).filter(LeaderboardEntry.user_id == user_id).first()
         score = result.score or 0
         level = result.level or 0

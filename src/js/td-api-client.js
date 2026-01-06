@@ -11,6 +11,7 @@ _TD.a.push(function (TD) {
 	}
 
 	APIClient.prototype._headers = function () {
+		// 带上 JWT（如果已登录/匿名身份已建立）
 		var headers = { "Content-Type": "application/json" };
 		if (this.authManager && this.authManager.token) {
 			headers.Authorization = "Bearer " + this.authManager.token;
@@ -19,6 +20,7 @@ _TD.a.push(function (TD) {
 	};
 
 	APIClient.prototype._request = function (path, options, retried) {
+		// 统一请求入口：遇到 401 自动刷新身份并重试
 		var url = this.baseUrl + path;
 		var _this = this;
 		return fetch(url, options).then(function (res) {
@@ -54,21 +56,25 @@ _TD.a.push(function (TD) {
 	};
 
 	APIClient.prototype.startGame = function (rulesVersion) {
+		// 开始排行榜模式，后端会返回 seed + attempt_id
 		return this.post("/api/game/start", {
 			rules_version: rulesVersion
 		});
 	};
 
 	APIClient.prototype.submitScore = function (payload) {
+		// 提交回放与声明分数，后端验证后入榜
 		return this.post("/api/game/submit", payload);
 	};
 
 	APIClient.prototype.getLeaderboard = function (limit) {
+		// 获取排行榜列表
 		var q = limit ? ("?limit=" + limit) : "";
 		return this.get("/api/leaderboard" + q);
 	};
 
 	APIClient.prototype.getMyRank = function () {
+		// 获取当前用户在榜单中的名次
 		return this.get("/api/leaderboard/me");
 	};
 

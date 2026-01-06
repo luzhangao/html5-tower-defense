@@ -11,6 +11,7 @@ class Recorder {
   }
 
   init(seed, rulesVersion) {
+    // 每局开始时重置记录器
     this.seed = seed;
     this.rulesVersion = rulesVersion;
     this.actions = [];
@@ -19,6 +20,7 @@ class Recorder {
   }
 
   record(action) {
+    // 记录 action，保证 tick 内数量上限
     const tick = action.t;
     const count = this.actionsPerTick.get(tick) || 0;
     if (count >= 2) {
@@ -33,6 +35,7 @@ class Recorder {
   }
 
   finalize(finalState) {
+    // 游戏结束时写入最终状态
     this.result = {
       score: finalState.score,
       wave: finalState.wave,
@@ -43,6 +46,7 @@ class Recorder {
   }
 
   export() {
+    // 导出提交给后端的回放结构
     return {
       seed: this.seed,
       rulesVersion: this.rulesVersion,

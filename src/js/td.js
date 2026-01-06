@@ -85,6 +85,7 @@ var _TD = {
 				this.leaderboardUI.init();
 				this.setupDomControls();
 
+				// 默认进入普通模式（不提交排行榜）
 				this.startNormalGame();
 			},
 
@@ -98,6 +99,7 @@ var _TD = {
 				TD.log("Start!");
 				var _this = this;
 
+				// 每次开局都重置运行态数据
 				this.mode = "normal"; // mode 分为 normail（普通模式）及 build（建造模式）两种
 				this.eventManager.clear(); // 清除事件管理器中监听的事件
 				this.lang.mix(this, this.defaultSettings());
@@ -116,6 +118,7 @@ var _TD = {
 					this.seed = (new Date()).getTime();
 				}
 				TD.initRandom(this.seed);
+				// core 模式下，重置 CoreRunner 的同步状态
 				if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.reset) {
 					if (window.CoreRunner.getRunner) {
 						var runningCore = window.CoreRunner.getRunner();
@@ -239,6 +242,7 @@ var _TD = {
 			 */
 			step: function () {
 
+				// 处理作弊码（排行榜模式禁用）
 				if (_TD && _TD.cheat) {
 					if (this.game_mode !== "leaderboard") {
 						// 检查作弊代码（仅普通模式允许）
@@ -267,8 +271,10 @@ var _TD = {
 					this.iframe = ticks[i];
 					if (this.iframe % 2400 == 0) TD.gc(); // 每隔一段时间自动回收垃圾
 					if (!this.core_mode) {
+						// 旧引擎：直接推进舞台逻辑
 						this.stage.step();
 					} else if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.getRunner) {
+						// core 模式：将逻辑交给 CoreRunner，再用 CoreSync 显示
 						var coreRunner = window.CoreRunner.getRunner();
 						if (coreRunner && coreRunner.syncToTick) {
 							coreRunner.syncToTick(this.iframe);
@@ -339,7 +345,13 @@ var _TD = {
 			 * @param txt
 			 */
 			log: function (txt) {
-				this.is_debug && window.console && console.log && console.log(txt);
+				this.debugLog(txt);
+			},
+
+			debugLog: function () {
+				// 统一的调试输出入口，便于全局开关
+				if (!this.is_debug || typeof window === "undefined" || !window.console || !console.log) return;
+				console.log.apply(console, arguments);
 			},
 
 			/**
@@ -396,9 +408,7 @@ var _TD = {
 				this.game_mode = "leaderboard";
 				if (this.submitButtonEl) this.submitButtonEl.disabled = true;
 				if (this.submitStatusEl) this.submitStatusEl.textContent = "Requesting seed...";
-				if (this.is_debug && window.console && console.log) {
-					console.log("[leaderboard] requesting seed");
-				}
+				this.debugLog("[leaderboard] requesting seed");
 				var onReady = function () {
 					this.apiClient.startGame(this.rulesVersion).then(function (res) {
 						this.attempt_id = res.attempt_id;
@@ -407,18 +417,14 @@ var _TD = {
 						this.start();
 						if (this.submitButtonEl) this.submitButtonEl.disabled = false;
 						if (this.submitStatusEl) this.submitStatusEl.textContent = "Attempt ready";
-						if (this.is_debug && window.console && console.log) {
-							console.log("[leaderboard] attempt ready", {
-								attempt_id: this.attempt_id,
-								seed: this.seed,
-								rules_version: this.rulesVersion
-							});
-						}
+						this.debugLog("[leaderboard] attempt ready", {
+							attempt_id: this.attempt_id,
+							seed: this.seed,
+							rules_version: this.rulesVersion
+						});
 					}.bind(this)).catch(function (err) {
 						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Start failed";
-						if (this.is_debug && window.console && console.log) {
-							console.log("[leaderboard] start failed", err);
-						}
+						this.debugLog("[leaderboard] start failed", err);
 					}.bind(this));
 				}.bind(this);
 
@@ -434,16 +440,12 @@ var _TD = {
 			submitScore: function () {
 				if (!this.attempt_id) {
 					if (this.submitStatusEl) this.submitStatusEl.textContent = "No attempt id";
-					if (this.is_debug && window.console && console.log) {
-						console.log("[submit] missing attempt id");
-					}
+					this.debugLog("[submit] missing attempt id");
 					return;
 				}
 				if (!this.recorder || !this.recorder.result) {
 					if (this.submitStatusEl) this.submitStatusEl.textContent = "No recorder result";
-					if (this.is_debug && window.console && console.log) {
-						console.log("[submit] missing recorder result");
-					}
+					this.debugLog("[submit] missing recorder result");
 					return;
 				}
 				var payload = {
@@ -457,26 +459,20 @@ var _TD = {
 				};
 
 				if (this.submitStatusEl) this.submitStatusEl.textContent = "Submitting...";
-				if (this.is_debug && window.console && console.log) {
-					console.log("[submit] payload", payload);
-				}
+				this.debugLog("[submit] payload", payload);
 				var submit = function () {
 					this.apiClient.submitScore(payload).then(function (res) {
 						this.last_submit_result = res;
 						if (this.submitStatusEl) {
 							this.submitStatusEl.textContent = res.success ? "Submitted" : ("Rejected: " + res.reason);
 						}
-						if (this.is_debug && window.console && console.log) {
-							console.log("[submit] result", res);
-						}
+						this.debugLog("[submit] result", res);
 						if (this.leaderboardUI) {
 							this.leaderboardUI.refresh();
 						}
 					}.bind(this)).catch(function (err) {
 						if (this.submitStatusEl) this.submitStatusEl.textContent = err.message || "Submit failed";
-						if (this.is_debug && window.console && console.log) {
-							console.log("[submit] failed", err);
-						}
+						this.debugLog("[submit] failed", err);
 					}.bind(this));
 				}.bind(this);
 

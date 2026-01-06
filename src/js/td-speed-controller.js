@@ -11,6 +11,7 @@ _TD.a.push(function (TD) {
 	}
 
 	SpeedController.prototype.setSpeed = function (speed) {
+		// 同步速度到 TickClock 与 CoreRunner
 		var idx = this.speeds.indexOf(speed);
 		if (idx === -1) {
 			idx = 0;
@@ -23,6 +24,7 @@ _TD.a.push(function (TD) {
 	};
 
 	SpeedController.prototype.cycleSpeed = function () {
+		// 循环切换速度（1x/2x/4x/...）
 		this.currentSpeedIndex = (this.currentSpeedIndex + 1) % this.speeds.length;
 		this.tickClock.setGameSpeed(this.speeds[this.currentSpeedIndex]);
 		if (typeof window !== "undefined" && window.CoreRunner && window.CoreRunner.setSpeed) {

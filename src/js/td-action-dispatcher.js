@@ -10,6 +10,7 @@ _TD.a.push(function (TD) {
 	}
 
 	ActionDispatcher.prototype.dispatch = function (action, isReplay) {
+		// 统一入口：校验、执行、记录 action
 		var td = this.td;
 		if (!isReplay && td.recorder && td.recorder.result) {
 			throw new Error("Game is over");
@@ -113,6 +114,7 @@ _TD.a.push(function (TD) {
 	};
 
 	ActionDispatcher.prototype.validatePlace = function (action, isReplay) {
+		// 放置建筑的前置校验：位置、阻挡、金币等
 		var td = this.td;
 		var scene = td.stage && td.stage.current_act && td.stage.current_act.current_scene;
 		if (!scene || scene.state !== 1) {
@@ -148,6 +150,7 @@ _TD.a.push(function (TD) {
 	};
 
 	ActionDispatcher.prototype.validateUpgrade = function (action) {
+		// 升级前检查：目标存在且金币足够
 		var td = this.td;
 		if (!action.entityId) throw new Error("Missing entityId");
 		var entity = td.entityManager.assertActive(action.entityId);
@@ -162,6 +165,7 @@ _TD.a.push(function (TD) {
 	};
 
 	ActionDispatcher.prototype.validateSell = function (action) {
+		// 出售前检查：目标存在且有效
 		if (!action.entityId) throw new Error("Missing entityId");
 		var entity = this.td.entityManager.assertActive(action.entityId);
 		if (!entity.data.building || !entity.data.building.is_valid) {
@@ -170,6 +174,7 @@ _TD.a.push(function (TD) {
 	};
 
 	ActionDispatcher.prototype.execute = function (action, isReplay) {
+		// 执行 action，并返回结果（如 entityId）
 		switch (action.op) {
 			case "place":
 				return this.executePlace(action, isReplay);

@@ -7,6 +7,7 @@ _TD.a.push(function (TD) {
 	function ScoringSystem() {}
 
 	ScoringSystem.calculateFinalScore = function (gameState, rules) {
+		// 分数由波次、时间、漏怪与金币余额综合计算
 		var scoring = rules.scoring;
 		var base_score = gameState.wave * scoring.base_score_per_wave;
 		var time_bonus = Math.max(

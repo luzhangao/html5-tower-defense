@@ -11,6 +11,7 @@ class ActionDispatcher {
   }
 
   dispatch(action, isReplay = false) {
+    // 统一入口：校验 -> 执行 -> 记录
     if (!action || typeof action.t !== 'number') {
       throw new Error('Invalid action: missing tick');
     }
@@ -50,6 +51,7 @@ class ActionDispatcher {
   }
 
   validatePlace(action, isReplay) {
+    // 放置建筑前检查位置与金币
     const { stage, money } = this.context;
     const scene = stage?.current_act?.current_scene;
     if (!scene || scene.state !== 1) {
@@ -106,6 +108,7 @@ class ActionDispatcher {
   }
 
   execute(action, isReplay) {
+    // 根据 op 执行具体逻辑
     switch (action.op) {
       case 'place':
         return this.executePlace(action, isReplay);

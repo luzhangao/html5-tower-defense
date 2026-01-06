@@ -14,6 +14,7 @@ class AntiCheatService:
 
     @staticmethod
     def check_rate_limit(user_id, db):
+        # 限制短时间内的提交次数
         cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=AntiCheatService.RATE_LIMIT_WINDOW)
         recent_count = (
             db.query(Submission)
@@ -25,6 +26,7 @@ class AntiCheatService:
 
     @staticmethod
     def get_entry_threshold(db):
+        # 计算入榜阈值：取第 120 名（100 + margin）的分数
         entries = (
             db.query(LeaderboardEntry)
             .order_by(LeaderboardEntry.score.desc())
@@ -37,6 +39,7 @@ class AntiCheatService:
 
     @staticmethod
     def is_suspicious_pattern(actions):
+        # 简单检测：action 间隔过于一致视为可疑
         if not actions:
             return True
         intervals = []
