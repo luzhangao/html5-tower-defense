@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from backend.app.database.connection import Base
 
@@ -15,5 +15,5 @@ class Submission(Base):
     level_actual = Column(Integer)
     actions = Column(String, nullable=False)
     validation_result = Column(String)
-    submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    submitted_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     validated_at = Column(DateTime)

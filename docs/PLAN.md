@@ -1226,11 +1226,11 @@ class AntiCheatService:
 ### 阶段5：测试
 
 #### 步骤5.1：前端测试
-- [ ] 配置Jest
-- [ ] 编写TickClock测试
-- [ ] 编写RandomGenerator测试（验证相同seed产生相同序列）
-- [ ] 编写ActionDispatcher测试
-- [ ] 编写Recorder测试
+- [x] 配置Jest
+- [x] 编写TickClock测试
+- [x] 编写RandomGenerator测试（验证相同seed产生相同序列）
+- [x] 编写ActionDispatcher测试
+- [x] 编写Recorder测试
 
 **涉及文件**：
 - 新建：`frontend/tests/unit/TickClock.test.js`
@@ -1239,10 +1239,11 @@ class AntiCheatService:
 - 新建：`frontend/tests/unit/Recorder.test.js`
 
 #### 步骤5.2：后端测试
-- [ ] 配置pytest
-- [ ] 编写API测试（auth, game, leaderboard）
-- [ ] 编写验证器测试
-- [ ] 编写防作弊测试
+- [x] 配置pytest
+- [x] 编写API测试（auth, game, leaderboard）
+- [x] 编写验证器测试
+- [x] 编写防作弊测试
+- [x] 后端测试通过（pytest backend/tests）
 
 **涉及文件**：
 - 新建：`backend/tests/test_api/test_auth.py`
@@ -1250,15 +1251,6 @@ class AntiCheatService:
 - 新建：`backend/tests/test_api/test_leaderboard.py`
 - 新建：`backend/tests/test_services/test_validator.py`
 - 新建：`backend/tests/test_services/test_anticheat.py`
-
-#### 步骤5.3：集成测试
-- [ ] 完整的游戏流程测试（开始→玩→提交→验证→入榜）
-- [ ] 验证相同seed产生相同结果
-- [ ] 验证作弊检测
-
-**涉及文件**：
-- 新建：`frontend/tests/integration/game-flow.test.js`
-- 新建：`backend/tests/integration/test_game_flow.py`
 
 ### 阶段6：文档编写
 

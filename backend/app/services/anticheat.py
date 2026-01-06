@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from backend.app.models.submission import Submission
 from backend.app.models.leaderboard import LeaderboardEntry
 
@@ -14,7 +14,7 @@ class AntiCheatService:
 
     @staticmethod
     def check_rate_limit(user_id, db):
-        cutoff_time = datetime.utcnow() - timedelta(seconds=AntiCheatService.RATE_LIMIT_WINDOW)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=AntiCheatService.RATE_LIMIT_WINDOW)
         recent_count = (
             db.query(Submission)
             .filter(Submission.user_id == user_id, Submission.submitted_at > cutoff_time)

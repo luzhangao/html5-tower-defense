@@ -1,7 +1,7 @@
 import hashlib
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
 
 JWT_SECRET = os.getenv("TD_JWT_SECRET", "dev-secret")
@@ -14,7 +14,7 @@ def create_anonymous_identity() -> tuple[str, str, str]:
     token = jwt.encode(
         {
             "sub": user_id,
-            "exp": datetime.utcnow() + timedelta(days=JWT_EXPIRES_DAYS),
+            "exp": datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRES_DAYS),
         },
         JWT_SECRET,
         algorithm=JWT_ALG,

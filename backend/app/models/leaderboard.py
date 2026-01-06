@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from backend.app.database.connection import Base
 
@@ -14,4 +14,4 @@ class LeaderboardEntry(Base):
     end_tick = Column(Integer)
     actions = Column(String, nullable=False)
     rules_version = Column(String, nullable=False)
-    submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    submitted_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))

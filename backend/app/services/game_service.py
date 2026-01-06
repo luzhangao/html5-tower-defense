@@ -1,7 +1,7 @@
 import json
 import logging
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from backend.app.models.attempt import Attempt
 from backend.app.models.submission import Submission
@@ -19,23 +19,25 @@ class GameService:
     def start_game(self, user_id: str, rules_version: str) -> dict:
         attempt_id = uuid.uuid4().hex
         seed = uuid.uuid4().int % 2_147_483_647
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(minutes=60)
         attempt = Attempt(
             attempt_id=attempt_id,
             user_id=user_id,
             seed=seed,
             rules_version=rules_version,
             created_at=now,
-            expires_at=now + timedelta(minutes=60),
+            expires_at=expires_at,
             used=False,
         )
         self.db.add(attempt)
         self.db.commit()
+        expires_at_iso = expires_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
         return {
             "attempt_id": attempt_id,
             "seed": seed,
             "rules_version": rules_version,
-            "expires_at": attempt.expires_at.isoformat() + "Z",
+            "expires_at": expires_at_iso,
         }
 
     async def submit_score(self, user_id: str, payload: dict) -> dict:
@@ -49,7 +51,10 @@ class GameService:
         if attempt.used:
             self.logger.warning("attempt already used user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Attempt already used"}
-        if attempt.expires_at < datetime.utcnow():
+        expires_at = attempt.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
             self.logger.warning("attempt expired user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Attempt expired"}
         if attempt.rules_version != payload["rules_version"]:
@@ -71,11 +76,11 @@ class GameService:
             score_claim=payload["score_claim"],
             level_claim=payload["level_claim"],
             actions=json.dumps(actions),
-            submitted_at=datetime.utcnow(),
+            submitted_at=datetime.now(timezone.utc),
         )
         self.db.add(submission)
         attempt.used = True
-        attempt.used_at = datetime.utcnow()
+        attempt.used_at = datetime.now(timezone.utc)
         self.db.commit()
 
         threshold = AntiCheatService.get_entry_threshold(self.db)
@@ -111,14 +116,14 @@ class GameService:
                 result.error,
             )
             submission.validation_result = json.dumps({"valid": False, "error": result.error})
-            submission.validated_at = datetime.utcnow()
+            submission.validated_at = datetime.now(timezone.utc)
             self.db.commit()
             return {"success": False, "reason": result.error or "Validation failed", "entered_leaderboard": False}
 
         submission.score_actual = result.score
         submission.level_actual = result.level
         submission.validation_result = json.dumps({"valid": True, "breakdown": result.breakdown})
-        submission.validated_at = datetime.utcnow()
+        submission.validated_at = datetime.now(timezone.utc)
         self.db.commit()
 
         entry = self.db.query(LeaderboardEntry).filter(LeaderboardEntry.user_id == user_id).first()
@@ -145,7 +150,7 @@ class GameService:
             entry.end_tick = payload.get("end_tick")
             entry.actions = actions_json
             entry.rules_version = attempt.rules_version
-            entry.submitted_at = datetime.utcnow()
+            entry.submitted_at = datetime.now(timezone.utc)
         else:
             entry = LeaderboardEntry(
                 user_id=user_id,
@@ -155,7 +160,7 @@ class GameService:
                 end_tick=payload.get("end_tick"),
                 actions=actions_json,
                 rules_version=attempt.rules_version,
-                submitted_at=datetime.utcnow(),
+                submitted_at=datetime.now(timezone.utc),
             )
             self.db.add(entry)
         self.db.commit()

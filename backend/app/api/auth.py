@@ -1,5 +1,5 @@
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 from backend.app.database.connection import get_db
@@ -20,7 +20,7 @@ def get_user_id(authorization: str | None = Header(default=None), db: Session = 
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     if user.token_hash != token_hash:
         raise HTTPException(status_code=401, detail="Invalid token")
-    user.last_active = datetime.utcnow()
+    user.last_active = datetime.now(timezone.utc)
     db.commit()
     return user_id
 
