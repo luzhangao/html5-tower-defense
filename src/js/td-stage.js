@@ -328,14 +328,11 @@ _TD.a.push(function (TD) {
 					TD.money = finalState.money;
 					TD.score = scoringResult.total;
 					TD.score_breakdown = scoringResult.breakdown;
-				if (TD.is_debug && window.console && console.log) {
-					console.log("[score] finalState", finalState);
-					console.log("[score] breakdown", scoringResult.breakdown);
-					console.log("[score] total", scoringResult.total);
-					if (window.TD_RANDOM && window.TD_RANDOM.getCallCount) {
-						console.log("[score] rng calls", window.TD_RANDOM.getCallCount());
+					if (TD.is_debug && window.console && console.log) {
+						console.log("[score] finalState", finalState);
+						console.log("[score] breakdown", scoringResult.breakdown);
+						console.log("[score] total", scoringResult.total);
 					}
-				}
 				if (TD.recorder) {
 					TD.recorder.finalize({
 						score: TD.score,

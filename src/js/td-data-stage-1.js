@@ -12,10 +12,6 @@ _TD.a.push(function (TD) {
 
 // main stage 初始化方法
 	var _stage_main_init = function () {
-			if (TD.getRandom) {
-				console.log("[INIT-START] RNG count:", TD.getRandom().getCallCount());
-			}
-
 			var act = new TD.Act(this, "act-1"),
 				scene = new TD.Scene(act, "scene-1"),
 				cfg = TD.getDefaultStageData("scene_endless");
@@ -50,14 +46,6 @@ _TD.a.push(function (TD) {
 			this.map = map;
 			this.wait_new_wave = this.config.wait_new_wave;
 
-			// Debug: log RNG count after initialization
-			if (TD.getRandom) {
-				console.log("[INIT-END] RNG count:", TD.getRandom().getCallCount());
-				if (TD.getRandom().getCallCount() > 0) {
-					console.log("Call summary during init:", TD.getRandom().getCallSummary());
-					TD.getRandom().printCallLog(50);
-				}
-			}
 		},
 		_stage_main_step2 = function () {
 			//TD.log(this.current_act.current_scene.wave);
@@ -278,12 +266,6 @@ _TD.a.push(function (TD) {
 					//difficulty = TD.difficulty || 1.0,
 						wave_damage = TD.wave_damage || 0;
 
-					// 记录wave开始时的RNG计数
-					var rngBefore = (window.TD_RANDOM && window.TD_RANDOM.getCallCount)
-						? window.TD_RANDOM.getCallCount()
-						: 0;
-					console.log("[WAVE-" + wave + "-START] RNG count:", rngBefore);
-
 					// 自动调整难度系数
 					if (wave == 1) {
 						//pass
@@ -311,10 +293,7 @@ _TD.a.push(function (TD) {
 					}
 					if (TD.difficulty < 1) TD.difficulty = 1;
 
-					var rngCalls = (window.TD_RANDOM && window.TD_RANDOM.getCallCount)
-						? window.TD_RANDOM.getCallCount()
-						: "n/a";
-					TD.log("wave " + wave + ", last wave damage = " + wave_damage + ", difficulty = " + TD.difficulty + ", rng=" + rngCalls);
+					TD.log("wave " + wave + ", last wave damage = " + wave_damage + ", difficulty = " + TD.difficulty);
 
 					//map.addMonsters(100, 7);
 					//map.addMonsters2([[10, 7], [5, 0], [5, 5]]);
@@ -329,18 +308,7 @@ _TD.a.push(function (TD) {
 
 					TD.wave_damage = 0;
 
-					// 记录wave结束时的RNG计数
-					var rngAfter = (window.TD_RANDOM && window.TD_RANDOM.getCallCount)
-						? window.TD_RANDOM.getCallCount()
-						: 0;
-					var rngUsed = rngAfter - rngBefore;
-					console.log("[WAVE-" + wave + "-END] RNG count:", rngAfter, ", used in wave:", rngUsed);
-
-					// 第一波打印详细日志
-					if (wave === 1 && window.TD_RANDOM) {
-						console.log("Call summary:", window.TD_RANDOM.getCallSummary());
-						window.TD_RANDOM.printCallLog(100);
-					}
+					
 				}
 			} // end of scene_endless
 		};

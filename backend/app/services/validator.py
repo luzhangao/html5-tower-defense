@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, List
@@ -17,6 +18,7 @@ class ValidationResult:
 class ReplayValidator:
     def __init__(self, verifier_url: str | None = None):
         self.verifier_url = verifier_url or os.getenv("VERIFIER_URL", "http://localhost:3001")
+        self.logger = logging.getLogger("td_api")
 
     async def validate(
         self,
@@ -43,12 +45,21 @@ class ReplayValidator:
                     json=payload,
                 )
                 if response.status_code != 200:
-                    print(f"[validator] verifier status={response.status_code} body={response.text}")
+                    self.logger.warning(
+                        "verifier status=%s body=%s",
+                        response.status_code,
+                        response.text,
+                    )
                     return ValidationResult(valid=False, error=f"Verifier error: {response.text}")
 
                 result = response.json()
                 state = result.get("state") or {}
-                print(f"[validator] verifier result valid={result.get('valid')} score={state.get('score')} level={state.get('wave')}")
+                self.logger.info(
+                    "verifier result valid=%s score=%s level=%s",
+                    result.get("valid"),
+                    state.get("score"),
+                    state.get("wave"),
+                )
                 return ValidationResult(
                     valid=result.get("valid", False),
                     score=state.get("score"),
@@ -59,5 +70,5 @@ class ReplayValidator:
         except httpx.TimeoutException:
             return ValidationResult(valid=False, error="Verification timeout")
         except Exception as exc:  # pylint: disable=broad-except
-            print(f"[validator] error: {exc}")
+            self.logger.exception("verifier error")
             return ValidationResult(valid=False, error=f"Verification error: {exc}")

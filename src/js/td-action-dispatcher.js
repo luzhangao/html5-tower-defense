@@ -21,17 +21,6 @@ _TD.a.push(function (TD) {
 			throw new Error("Too many actions in single tick");
 		}
 
-		// 记录执行前的RNG状态
-		var rngBefore = TD.getRandom ? TD.getRandom().getCallCount() : 0;
-
-		// 回放时验证RNG状态
-		if (isReplay && action.rngBefore !== undefined) {
-			if (rngBefore !== action.rngBefore) {
-				console.warn("[RNG Mismatch] Action at tick " + action.t +
-					": expected RNG=" + action.rngBefore + ", actual=" + rngBefore);
-			}
-		}
-
 		if (!isReplay && TD.core_mode && window.CoreRunner && window.CoreRunner.getRunner) {
 			var runner = window.CoreRunner.getRunner();
 			if (runner && runner.engine) {
@@ -53,7 +42,6 @@ _TD.a.push(function (TD) {
 
 				this.lastActionTick = action.t;
 
-				var rngAfterCore = TD.getRandom ? TD.getRandom().getCallCount() : 0;
 				if (td.recorder) {
 					var recordedCore = TD.lang.mix({}, coreAction, true);
 					var afterIds = Object.keys(runner.engine.state.entities || {});
@@ -65,8 +53,6 @@ _TD.a.push(function (TD) {
 							}
 						}
 					}
-					recordedCore.rngBefore = rngBefore;
-					recordedCore.rngAfter = rngAfterCore;
 					td.recorder.record(recordedCore);
 				}
 
@@ -95,18 +81,12 @@ _TD.a.push(function (TD) {
 		var result = this.execute(action, isReplay);
 		this.lastActionTick = action.t;
 
-		// 记录执行后的RNG状态
-		var rngAfter = TD.getRandom ? TD.getRandom().getCallCount() : 0;
-
 		var recorded = null;
 		if (!isReplay && td.recorder) {
 			recorded = TD.lang.mix({}, action, true);
 			if (result && result.entityId) {
 				recorded.entityId = result.entityId;
 			}
-			// 记录RNG状态
-			recorded.rngBefore = rngBefore;
-			recorded.rngAfter = rngAfter;
 			td.recorder.record(recorded);
 		}
 
@@ -123,14 +103,6 @@ _TD.a.push(function (TD) {
 				} else {
 					runner.queueAction(coreAction);
 				}
-			}
-		}
-
-		// 回放时验证执行后的RNG状态
-		if (isReplay && action.rngAfter !== undefined) {
-			if (rngAfter !== action.rngAfter) {
-				console.warn("[RNG Mismatch] After action at tick " + action.t +
-					": expected RNG=" + action.rngAfter + ", actual=" + rngAfter);
 			}
 		}
 

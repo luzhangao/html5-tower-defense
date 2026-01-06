@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ class GameService:
     def __init__(self, db: Session, validator: ReplayValidator):
         self.db = db
         self.validator = validator
+        self.logger = logging.getLogger("td_api")
 
     def start_game(self, user_id: str, rules_version: str) -> dict:
         attempt_id = uuid.uuid4().hex
@@ -37,26 +39,30 @@ class GameService:
         }
 
     async def submit_score(self, user_id: str, payload: dict) -> dict:
-        print(f"[service] submit_score user_id={user_id}")
+        self.logger.info("submit_score user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
         AntiCheatService.check_rate_limit(user_id, self.db)
 
         attempt = self.db.query(Attempt).filter(Attempt.attempt_id == payload["attempt_id"]).first()
         if not attempt or attempt.user_id != user_id:
-            print("[service] invalid attempt")
+            self.logger.warning("invalid attempt user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Invalid attempt"}
         if attempt.used:
-            print("[service] attempt already used")
+            self.logger.warning("attempt already used user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Attempt already used"}
         if attempt.expires_at < datetime.utcnow():
-            print("[service] attempt expired")
+            self.logger.warning("attempt expired user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Attempt expired"}
         if attempt.rules_version != payload["rules_version"]:
-            print("[service] rules version mismatch")
+            self.logger.warning(
+                "rules version mismatch user_id=%s attempt_id=%s",
+                user_id,
+                payload.get("attempt_id"),
+            )
             return {"success": False, "reason": "Rules version mismatch"}
 
         actions = payload.get("actions") or []
         if AntiCheatService.is_suspicious_pattern(actions):
-            print("[service] suspicious actions")
+            self.logger.warning("suspicious actions user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
             return {"success": False, "reason": "Suspicious actions"}
 
         submission = Submission(
@@ -74,7 +80,12 @@ class GameService:
 
         threshold = AntiCheatService.get_entry_threshold(self.db)
         if payload["score_claim"] < threshold:
-            print(f"[service] below threshold {payload['score_claim']} < {threshold}")
+            self.logger.info(
+                "below threshold user_id=%s score_claim=%s threshold=%s",
+                user_id,
+                payload["score_claim"],
+                threshold,
+            )
             return {
                 "success": True,
                 "score": payload["score_claim"],
@@ -83,7 +94,7 @@ class GameService:
                 "reason": "Score below threshold",
             }
 
-        print("[service] validating replay")
+        self.logger.info("validating replay user_id=%s attempt_id=%s", user_id, payload.get("attempt_id"))
         result = await self.validator.validate(
             attempt.seed,
             attempt.rules_version,
@@ -93,7 +104,12 @@ class GameService:
             payload.get("end_tick"),
         )
         if not result.valid:
-            print(f"[service] validation failed: {result.error}")
+            self.logger.warning(
+                "validation failed user_id=%s attempt_id=%s error=%s",
+                user_id,
+                payload.get("attempt_id"),
+                result.error,
+            )
             submission.validation_result = json.dumps({"valid": False, "error": result.error})
             submission.validated_at = datetime.utcnow()
             self.db.commit()
@@ -111,7 +127,12 @@ class GameService:
         actions_json = json.dumps(actions)
         if entry:
             if score <= entry.score:
-                print("[service] score not higher than existing")
+                self.logger.info(
+                    "score not higher user_id=%s score=%s existing=%s",
+                    user_id,
+                    score,
+                    entry.score,
+                )
                 return {
                     "success": True,
                     "score": score,

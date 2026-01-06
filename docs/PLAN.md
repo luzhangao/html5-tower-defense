@@ -1140,9 +1140,9 @@ class AntiCheatService:
 - [x] 使用webpack打包前端引擎为Node.js模块
 - [x] 实现`verify.js`脚本
 - [x] 实现Python调用Node.js的接口
-- [ ]（重构替代）补齐headless引擎逻辑，使其与前端一致（怪物/波次/建塔/升级/卖塔/计分）
-- [ ]（重构替代）统一验证口径（rulesVersion、随机数、Action校验、实体生命周期）
-- [ ]（重构替代）校验前后端字段一致性（score/level/endTick/money等）
+- [x]（重构替代）补齐headless引擎逻辑，使其与前端一致（怪物/波次/建塔/升级/卖塔/计分）
+- [x]（重构替代）统一验证口径（rulesVersion、随机数、Action校验、实体生命周期）
+- [x]（重构替代）校验前后端字段一致性（score/level/endTick/money等）
 
 #### 步骤4.5.1：RNG一致性修复（已完成）
 
@@ -1166,8 +1166,8 @@ class AntiCheatService:
 - [x] 在ActionDispatcher中记录和验证RNG状态
 
 **待完成**：
-- [ ]（重构替代）实现怪物寻路重计算的延迟机制
-- [ ]（重构替代）测试验证完整游戏流程RNG一致性
+- [x]（重构替代）实现怪物寻路重计算的延迟机制
+- [x]（重构替代）测试验证完整游戏流程RNG一致性
 
 **涉及文件**：
 - `src/js/td-random.js` - RNG调用追踪
@@ -1181,9 +1181,9 @@ class AntiCheatService:
 - [x] 实现Top100+20门槛机制
 
 #### 步骤4.7：服务端日志与调试
-- [ ] 后端API错误日志（FastAPI）
-- [ ] verifier错误日志（Node）
-- [ ] 关键流程日志（start/submit/validate）
+- [x] 后端API错误日志（FastAPI）
+- [x] verifier错误日志（Node）
+- [x] 关键流程日志（start/submit/validate）
 
 **涉及文件**：
 - 新建：`backend/app/api/leaderboard.py`
@@ -1214,7 +1214,7 @@ class AntiCheatService:
 7. [x] **替换现有验证链路**  
    - [x] verifier改为直接调用Core（verify-core）  
    - [x] 后端提交改用 verify-core 接口并传入 end_tick  
-   - [ ] 移除现有RNG调试/修补逻辑（归档）
+   - [x] 移除现有RNG调试/修补逻辑（归档）
 
 **涉及文件（待定）**：
 - 新建：`frontend/src/core-engine/*`（Core Engine模块）
