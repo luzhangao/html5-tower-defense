@@ -24,7 +24,9 @@ const TD = {
     // 初始化Tick时钟（24 tps）
     this.tickClock = new TickClock(24);
     this.coreRunner = new BrowserRunner({ seed: Date.now(), rulesVersion: '1.0.0', tickRate: 24 });
-    this.coreDebug = new DebugRenderer({ runner: this.coreRunner });
+    if (typeof window !== 'undefined' && window.CORE_DEBUG === true) {
+      this.coreDebug = new DebugRenderer({ runner: this.coreRunner });
+    }
 
     // TODO: 初始化其他系统
     // - RandomGenerator

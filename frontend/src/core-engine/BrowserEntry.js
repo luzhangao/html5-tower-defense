@@ -1,18 +1,20 @@
 import { BrowserRunner, DebugRenderer } from './index';
 
-const debugEnabled = true;
+const debugEnabled = typeof window !== 'undefined' && window.CORE_DEBUG === true;
 const runner = new BrowserRunner({
   seed: Date.now(),
   rulesVersion: '1.0.0',
   tickRate: 24,
   debug: debugEnabled
 });
-const debug = new DebugRenderer({ runner });
+const debug = debugEnabled ? new DebugRenderer({ runner }) : null;
 
 if (typeof window !== 'undefined' && window.CORE_AUTOSTART) {
   runner.start();
 }
-debug.start();
+if (debug) {
+  debug.start();
+}
 
 if (typeof window !== 'undefined') {
   window.CoreRunner = {
