@@ -184,3 +184,12 @@
   - 在 `docs/PLAN.md` 标记文档完成项。
 - 验收:
   - 文档创建并与当前实现一致。
+
+## 阶段7 工作记录
+### Docker 化
+- Prompt: “开始阶段7。”
+- 操作:
+  - 新增 `frontend/Dockerfile`、`backend/Dockerfile`、`backend/verifier/Dockerfile`。
+  - 新增 `docker-compose.yml`，串联 frontend/backend/verifier。
+- 验收:
+  - `docker compose up --build` 可启动三服务，端口分别为 8081/8000/3001。

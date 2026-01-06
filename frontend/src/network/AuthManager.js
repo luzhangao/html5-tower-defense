@@ -26,6 +26,12 @@ class AuthManager {
     }
   }
 
+  clear() {
+    this.userId = null;
+    this.token = null;
+    this.save();
+  }
+
   ensureIdentity(apiClient) {
     this.load();
     if (this.userId && this.token) {

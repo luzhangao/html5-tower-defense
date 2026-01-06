@@ -44,6 +44,16 @@ cd frontend && npm test
 poetry run pytest backend/tests
 ```
 
+## Docker Compose
+```bash
+docker compose up --build
+```
+
+服务端口：
+- 前端：`http://localhost:8081/td.html`
+- 后端：`http://localhost:8000`
+- 验证器：`http://localhost:3001/health`
+
 ## 环境变量
 - `TD_DB_PATH`：SQLite 数据库路径（默认 `backend/app/database/td.db`）
 - `TD_JWT_SECRET`：匿名身份签名密钥（默认 `dev-secret`）

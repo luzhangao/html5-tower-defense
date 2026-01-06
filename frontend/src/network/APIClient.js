@@ -15,9 +15,15 @@ class APIClient {
     return headers;
   }
 
-  _request(path, options) {
+  _request(path, options, retried = false) {
     const url = `${this.baseUrl}${path}`;
     return fetch(url, options).then(async (res) => {
+      if (res.status === 401 && this.authManager && !retried) {
+        this.authManager.clear();
+        await this.authManager.ensureIdentity(this);
+        const retryOptions = { ...options, headers: this._headers() };
+        return this._request(path, retryOptions, true);
+      }
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `HTTP ${res.status}`);

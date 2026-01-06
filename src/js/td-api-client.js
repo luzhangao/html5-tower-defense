@@ -18,9 +18,17 @@ _TD.a.push(function (TD) {
 		return headers;
 	};
 
-	APIClient.prototype._request = function (path, options) {
+	APIClient.prototype._request = function (path, options, retried) {
 		var url = this.baseUrl + path;
+		var _this = this;
 		return fetch(url, options).then(function (res) {
+			if (res.status === 401 && _this.authManager && !retried) {
+				_this.authManager.clear();
+				return _this.authManager.ensureIdentity(_this).then(function () {
+					var retryOptions = Object.assign({}, options, { headers: _this._headers() });
+					return _this._request(path, retryOptions, true);
+				});
+			}
 			if (!res.ok) {
 				return res.text().then(function (txt) {
 					throw new Error(txt || ("HTTP " + res.status));

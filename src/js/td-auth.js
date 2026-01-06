@@ -28,6 +28,12 @@ _TD.a.push(function (TD) {
 		}
 	};
 
+	AuthManager.prototype.clear = function () {
+		this.userId = null;
+		this.token = null;
+		this.save();
+	};
+
 	AuthManager.prototype.ensureIdentity = function (apiClient) {
 		this.load();
 		if (this.userId && this.token) {

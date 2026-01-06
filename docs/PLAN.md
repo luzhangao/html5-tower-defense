@@ -1282,13 +1282,14 @@ class AntiCheatService:
 ### 阶段7：部署
 
 #### 步骤7.1：Docker化
-- [ ] 编写前端Dockerfile
-- [ ] 编写后端Dockerfile
-- [ ] 编写docker-compose.yml
+- [x] 编写前端Dockerfile
+- [x] 编写后端Dockerfile
+- [x] 编写docker-compose.yml
 
 **涉及文件**：
 - 新建：`frontend/Dockerfile`
 - 新建：`backend/Dockerfile`
+- 新建：`backend/verifier/Dockerfile`
 - 新建：`docker-compose.yml`
 
 #### 步骤7.2：部署测试
