@@ -1293,6 +1293,9 @@ class AntiCheatService:
 - 新建：`docker-compose.yml`
 
 #### 步骤7.2：部署测试
+- [x] 本地通过 Docker Compose 完整流程测试
+
+#### 步骤7.2：部署测试
 - [ ] 本地docker-compose测试
 - [ ] 验证前后端通信
 - [ ] 验证数据持久化

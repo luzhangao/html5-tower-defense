@@ -64,6 +64,9 @@ var _TD = {
 				}
 				this.attempt_id = null;
 				this.apiBaseUrl = "http://localhost:8000";
+				if (typeof window !== "undefined" && window.TD_API_BASE_URL) {
+					this.apiBaseUrl = window.TD_API_BASE_URL;
+				}
 
 				if (typeof __TD_HEADLESS__ !== "undefined" && __TD_HEADLESS__) {
 					this.game_mode = "normal";

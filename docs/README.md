@@ -55,6 +55,8 @@ docker compose up --build
 - 验证器：`http://localhost:3001/health`
 
 ## 环境变量
+- `TD_API_BASE_URL`：前端请求 API 的基地址（写入 `js/config.js`）
+- `TD_CORS_ORIGINS`：后端允许的 CORS 来源（逗号分隔）
 - `TD_DB_PATH`：SQLite 数据库路径（默认 `backend/app/database/td.db`）
 - `TD_JWT_SECRET`：匿名身份签名密钥（默认 `dev-secret`）
 - `VERIFIER_URL`：后端调用验证器地址（默认 `http://localhost:3001`）

@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    environment:
+      TD_API_BASE_URL: ${TD_API_BASE_URL:-http://localhost:8000}
     ports:
       - "8081:80"
     depends_on:
@@ -15,6 +17,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
+      TD_CORS_ORIGINS: ${TD_CORS_ORIGINS:-http://localhost:8081,http://127.0.0.1:8081}
       TD_DB_PATH: /data/td.db
       VERIFIER_URL: http://verifier:3001
     volumes:

@@ -12,4 +12,6 @@ RUN cd frontend && npx webpack --config ../webpack.config.core-browser.js
 
 FROM nginx:alpine
 COPY --from=builder /app/src /usr/share/nginx/html
+COPY frontend/docker-entrypoint.sh /docker-entrypoint.d/99-config.sh
+RUN chmod +x /docker-entrypoint.d/99-config.sh
 EXPOSE 80
